@@ -31,6 +31,6 @@ def load_image(image_path):
     image = read_image(image_path, format="BGR")
     h = image.shape[0]
     w = image.shape[1]
-    img_trans = TransformList([ResizeTransform(h=h, w=w, new_h=224, new_w=224)])
+    img_trans = TransformList([ResizeTransform(h=h, w=w, new_h=224, new_w=224, interp=None)])
     image = torch.tensor(img_trans.apply_image(image).copy()).permute(2, 0, 1)  # copy to make it writeable
     return image, (w, h)
