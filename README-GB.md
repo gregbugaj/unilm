@@ -4,6 +4,8 @@
 
 https://github.com/NielsRogge/Transformers-Tutorials
 
+https://www.kaggle.com/ammarnassanalhajali/fine-tuning-layoutlmv2-on-funsd/notebook
+
 https://nanonets.com/blog/layoutlm-explained/
 
 
