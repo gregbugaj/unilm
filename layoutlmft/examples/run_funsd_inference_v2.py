@@ -16,22 +16,22 @@ from transformers import LayoutLMv2Processor, LayoutLMv2FeatureExtractor, Layout
 from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 
 # https://github.com/huggingface/transformers/blob/d3ae2bd3cf9fc1c3c9c9279a8bae740d1fd74f34/tests/layoutlmv2/test_processor_layoutlmv2.py
-
+# https://huggingface.co/docs/transformers/model_doc/layoutlmv2
 
 from datasets import load_dataset
 # Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
 from detectron2.config import get_cfg
 from PIL import Image, ImageDraw, ImageFont
 
-datasets = load_dataset("nielsr/funsd")
-print(datasets)
 
 processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased", revision="no_ocr")
-# processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased")
 model = LayoutLMv2ForTokenClassification.from_pretrained("nielsr/layoutlmv2-finetuned-funsd")
+
 
 # load image example
 dataset = load_dataset("nielsr/funsd", split="test")
+print(dataset)
+
 image = Image.open(dataset[0]["image_path"]).convert("RGB")
 image.save("document.png")
 
@@ -59,7 +59,6 @@ def iob_to_label(label):
 
 def process_image(image):
     width, height = image.size
-
     # encode
     encoding = processor(image, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = encoding.pop('offset_mapping')

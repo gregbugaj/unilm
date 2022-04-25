@@ -1,18 +1,29 @@
 from datasets import load_dataset 
+import torch
+from torch.nn import DataParallel
 from PIL import Image
 from transformers import LayoutLMv2Processor
 from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
+from torch.utils.data import DataLoader
+from transformers import LayoutLMv2ForTokenClassification, AdamW
+import torch
+from tqdm import tqdm
+from datasets import load_metric
 
+use_cuda = torch.cuda.is_available()
+device= torch.device('cuda:0' if use_cuda else 'cpu')
+print(device)
+device_ids = [0]
 
 datasets = load_dataset("nielsr/funsd")
-labels = datasets['train'].features['ner_tags'].feature.names
 
-print(datasets)
+labels = datasets['train'].features['ner_tags'].feature.names
 print(labels)
 
 id2label = {v: k for v, k in enumerate(labels)}
 label2id = {k: v for v, k in enumerate(labels)}
 
+##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 
 processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased", revision="no_ocr")
 
@@ -42,51 +53,48 @@ train_dataset = datasets['train'].map(preprocess_data, batched=True, remove_colu
 test_dataset = datasets['test'].map(preprocess_data, batched=True, remove_columns=datasets['test'].column_names,
                                       features=features)
 
-
-print(train_dataset)                                      
-print(test_dataset)                                      
-
-
 processor.tokenizer.decode(train_dataset['input_ids'][0])
 
 print(train_dataset['labels'][0])
+processor.save_pretrained("./tuned")
 
-# Next, we create corresponding dataloaders.
-train_dataset.set_format(type="torch", device="cuda")
-test_dataset.set_format(type="torch", device="cuda")
+##Finally, let's set the format to PyTorch, and place everything on the GPU:
 
+train_dataset.set_format(type="torch", device=device)
+test_dataset.set_format(type="torch", device=device)
 
-from torch.utils.data import DataLoader
+train_dataset.features.keys()
+
+##Next, we create corresponding dataloaders.
 
 train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=2)
 
-# Let's verify a batch:
+##Let's verify a batch:
+
 batch = next(iter(train_dataloader))
 
 for k,v in batch.items():
   print(k, v.shape)
 
-
 ## Train the model
-# Here we train the model in native PyTorch. We use the AdamW optimizer.
-
-from transformers import LayoutLMv2ForTokenClassification, AdamW
-import torch
-from tqdm import tqdm
+##Here we train the model in native PyTorch. We use the AdamW optimizer.
 
 model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased',
                                                           num_labels=len(labels))
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if use_cuda:
+    model = DataParallel(model,device_ids=device_ids)
+
 model.to(device)
+
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 global_step = 0
 num_train_epochs = 6
 t_total = len(train_dataloader) * num_train_epochs # total number of training steps 
 
-#put the model in training mode
+# put the model in training mode
 model.train() 
 for epoch in range(num_train_epochs):  
    print("Epoch:", epoch)
@@ -107,10 +115,13 @@ for epoch in range(num_train_epochs):
         global_step += 1
 
 
+# torch.save(model.state_dict(), "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
+torch.save(model, "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
+
 ## Evaluation
 
-from datasets import load_metric
-# Next, let's evaluate the model on the test set.
+#Next, let's evaluate the model on the test set.
+
 metric = load_metric("seqeval")
 
 # put model in evaluation mode
