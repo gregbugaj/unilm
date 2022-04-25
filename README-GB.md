@@ -47,3 +47,11 @@ python examples/run_funsd.py \
         --per_device_train_batch_size 2 \
         --per_device_eval_batch_size 2 \
         --load_best_model_at_end 
+
+
+## Dataset format
+https://guillaumejaume.github.io/FUNSD/description/
+
+## Ideas 
+
+https://github.com/doccano/doccano
