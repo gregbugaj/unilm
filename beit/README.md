@@ -2,6 +2,7 @@
 
 Official PyTorch implementation and pretrained models of BEiT.
 
+- March, 2022: add [linear probe examples](https://github.com/microsoft/unilm/blob/master/beit/get_started_for_image_classification.md#example-linear-probe-on-imagenet)
 - March, 2022: Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/rowel/22k-image-classification)
 - Januray, 2022: [**BEiT**](https://openreview.net/forum?id=p-BhZSz59o4) was accepted by **ICLR 2022 as Oral presentation** (54 out of 3391).
 - August 2021: [**BEiT**](https://huggingface.co/transformers/master/model_doc/beit.html) is on [HuggingFace](https://github.com/huggingface/transformers)
@@ -22,12 +23,12 @@ We provide four BEiT weights pretrained on ImageNet-22k. The models were pretrai
 - `BEiT-large`: #layer=24; hidden=1024; FFN factor=4x; #head=16; patch=16x16 (#parameters: 304M)
 
 Download checkpoints that are **self-supervised pretrained and then intermediate fine-tuned** on ImageNet-22k (recommended):
-- BEiT-base: [beit_base_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft22k.pth)
-- BEiT-large: [beit_large_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k_ft22k.pth)
+- BEiT-base: [beit_base_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k_ft22k.pth)
+- BEiT-large: [beit_large_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k_ft22k.pth)
 
 Download checkpoints that are **self-supervised pretrained** on ImageNet-22k:
-- BEiT-base: [beit_base_patch16_224_pt22k](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k.pth)
-- BEiT-large: [beit_large_patch16_224_pt22k](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k.pth)
+- BEiT-base: [beit_base_patch16_224_pt22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k.pth)
+- BEiT-large: [beit_large_patch16_224_pt22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k.pth)
 
 
 ## Setup
@@ -59,13 +60,13 @@ We summarize the validation results as follows. We also provide the fine-tuned w
 
 | name | initialized checkpoint | resolution | acc@1 | acc@5 | #params | weight | log |
 |------------|:----------------------------------------|:----------:|:-----:|:-----:|:-------:|-------------------|-----|
-| BEiT-base | [beit_base_patch16_224_pt22k](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k.pth) | 224x224 | 83.7 | 96.6 | 87M | [link](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft1k.pth) | [link](https://paste.ubuntu.com/p/79z5PncrKZ/) |
-| BEiT-base | [beit_base_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft22k.pth) | 224x224 | 85.2 | 97.6 | 87M | [link](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/KqFh55cwq4/) |
-| BEiT-base | [beit_base_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft22k.pth) | 384x384 | 86.8 | 98.1 | 87M | [link](https://unilm.blob.core.windows.net/beit/beit_base_patch16_384_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/jnpD4NGZQn/) |
-| BEiT-large | [beit_large_patch16_224_pt22k](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k.pth) | 224x224 | 86.0 | 97.6 | 304M | [link](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k_ft1k.pth) | [link](https://paste.ubuntu.com/p/r4X4gHq6W5/) |
-| BEiT-large | [beit_large_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k_ft22k.pth) | 224x224 | 87.4 | 98.3 | 304M | [link](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/DpHhW5Zgk5/) |
-| BEiT-large | [beit_large_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k_ft22k.pth) | 384x384 | 88.4 | 98.6 | 305M | [link](https://unilm.blob.core.windows.net/beit/beit_large_patch16_384_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/xKTBDwPMd2/) |
-| BEiT-large | [beit_large_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k_ft22k.pth) | 512x512 | 88.60 | 98.66 | 306M | [link](https://unilm.blob.core.windows.net/beit/beit_large_patch16_512_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/Wsb3NwkfCR/) |
+| BEiT-base | [beit_base_patch16_224_pt22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k.pth) | 224x224 | 83.7 | 96.6 | 87M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k_ft1k.pth) | [link](https://paste.ubuntu.com/p/79z5PncrKZ/) |
+| BEiT-base | [beit_base_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k_ft22k.pth) | 224x224 | 85.2 | 97.6 | 87M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/KqFh55cwq4/) |
+| BEiT-base | [beit_base_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k_ft22k.pth) | 384x384 | 86.8 | 98.1 | 87M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_384_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/jnpD4NGZQn/) |
+| BEiT-large | [beit_large_patch16_224_pt22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k.pth) | 224x224 | 86.0 | 97.6 | 304M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k_ft1k.pth) | [link](https://paste.ubuntu.com/p/r4X4gHq6W5/) |
+| BEiT-large | [beit_large_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k_ft22k.pth) | 224x224 | 87.4 | 98.3 | 304M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/DpHhW5Zgk5/) |
+| BEiT-large | [beit_large_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k_ft22k.pth) | 384x384 | 88.4 | 98.6 | 305M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_384_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/xKTBDwPMd2/) |
+| BEiT-large | [beit_large_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k_ft22k.pth) | 512x512 | 88.60 | 98.66 | 306M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_512_pt22k_ft22kto1k.pth) | [link](https://paste.ubuntu.com/p/Wsb3NwkfCR/) |
 
 
 ## Fine-tuning on ADE20K (semantic segmentation)
@@ -74,8 +75,8 @@ We summarize the validation results as follows. We also provide the fine-tuned w
 
 |name|initialized checkpoint|method|crop size|Lr schd|mIoU|mIoU (ms+flip)|#params|weight|log|
 |:-----------|:---------------------|:-------:|:---------:|:-------:|:----:|:--------------:|:-------:|:-------|:---:|
-|BEiT-base|[beit_base_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft22k.pth)|UPerNet|640x640|160k|53.6|54.2|163M|[link](https://unilm.blob.core.windows.net/beit/beit_base_patch16_640_pt22k_ft22ktoade20k.pth)|[link](https://paste.ubuntu.com/p/FKc2cvvJsC/)|
-|BEiT-large|[beit_large_patch16_224_pt22k_ft22k](https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k_ft22k.pth)|UPerNet|640x640|160k|56.7|57.0|441M|[link](https://unilm.blob.core.windows.net/beit/beit_large_patch16_640_pt22k_ft22ktoade20k.pth)|[link](https://paste.ubuntu.com/p/sdsWCDRzk2/)|
+|BEiT-base|[beit_base_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k_ft22k.pth)|UPerNet|640x640|160k|53.6|54.2|163M|[link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_640_pt22k_ft22ktoade20k.pth)|[link](https://paste.ubuntu.com/p/FKc2cvvJsC/)|
+|BEiT-large|[beit_large_patch16_224_pt22k_ft22k](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k_ft22k.pth)|UPerNet|640x640|160k|56.7|57.0|441M|[link](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_640_pt22k_ft22ktoade20k.pth)|[link](https://paste.ubuntu.com/p/sdsWCDRzk2/)|
 
 
 ## Example: Pre-training BEiT-base on ImageNet-22k
@@ -121,8 +122,8 @@ DATA_PATH=/path/to/imagenet1k_train_set
 # Download the tokenizer weight from OpenAI's DALL-E
 TOKENIZER_PATH=/path/to/save/dall_e_tokenizer_weight
 mkdir -p $TOKENIZER_PATH
-wget -o $TOKENIZER_PATH/encoder.pkl https://cdn.openai.com/dall-e/encoder.pkl
-wget -o $TOKENIZER_PATH/decoder.pkl https://cdn.openai.com/dall-e/decoder.pkl
+wget -o $TOKENIZER_PATH/encoder.pkl https://conversationhub.blob.core.windows.net/beit-share-public/dall-e_vae/encoder.pkl
+wget -o $TOKENIZER_PATH/decoder.pkl https://conversationhub.blob.core.windows.net/beit-share-public/dall-e_vae/decoder.pkl
 
 OMP_NUM_THREADS=1 python -m torch.distributed.launch --nproc_per_node=16 run_beit_pretraining.py \
         --data_path ${DATA_PATH} --output_dir ${OUTPUT_DIR} --num_mask_patches 75 \
@@ -145,7 +146,7 @@ DATA_PATH=/path/to/imagenet22k
 OMP_NUM_THREADS=1 python -m torch.distributed.launch --nproc_per_node=16 run_class_finetuning.py \
     --model beit_large_patch16_224 --data_path $DATA_PATH \
     --nb_classes 21841 --data_set image_folder --disable_eval_during_finetuning \
-    --finetune https://unilm.blob.core.windows.net/beit/beit_large_patch16_224_pt22k.pth \
+    --finetune https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_large_patch16_224_pt22k.pth \
     --output_dir $OUTPUT_DIR --batch_size 64 --lr 2e-3 --update_freq 2 \
     --warmup_epochs 5 --epochs 90 --layer_decay 0.75 --drop_path 0.2 \
     --weight_decay 0.05 --enable_deepspeed --layer_scale_init_value 1e-5 --clip_grad 1.0
@@ -170,7 +171,7 @@ DATA_PATH=/path/to/imagenet22k
 OMP_NUM_THREADS=1 python -m torch.distributed.launch --nproc_per_node=16 run_class_finetuning.py \
     --model beit_base_patch16_224 --data_path $DATA_PATH \
     --nb_classes 21841 --data_set image_folder --disable_eval_during_finetuning \
-    --finetune https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k.pth \
+    --finetune https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k.pth \
     --output_dir $OUTPUT_DIR --batch_size 256 --lr 3e-3 --update_freq 1 \
     --warmup_epochs 5 --epochs 90 --layer_decay 0.65 --drop_path 0.2 \
     --weight_decay 0.05 --enable_deepspeed --layer_scale_init_value 0.1 --clip_grad 3.0
