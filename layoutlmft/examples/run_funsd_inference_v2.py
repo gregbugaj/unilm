@@ -21,9 +21,25 @@ from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 from datasets import load_dataset
 # Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
 from detectron2.config import get_cfg
+from PIL import Image, ImageDraw, ImageFont
 
 datasets = load_dataset("nielsr/funsd")
 print(datasets)
+
+processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased", revision="no_ocr")
+# processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased")
+model = LayoutLMv2ForTokenClassification.from_pretrained("nielsr/layoutlmv2-finetuned-funsd")
+
+# load image example
+dataset = load_dataset("nielsr/funsd", split="test")
+image = Image.open(dataset[0]["image_path"]).convert("RGB")
+image.save("document.png")
+
+# define id2label, label2color
+labels = dataset.features['ner_tags'].feature.names
+id2label = {v: k for v, k in enumerate(labels)}
+label2color = {'question': 'blue', 'answer': 'green', 'header': 'orange', 'other': 'violet'}
+
 
 def unnormalize_box(bbox, width, height):
     return [
@@ -41,84 +57,44 @@ def iob_to_label(label):
     return label
 
 
-def main():
-    # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
-    check_min_version("4.5.0")
-    logger = logging.getLogger(__name__)
-
-    labels = datasets['train'].features['ner_tags'].feature.names
-    print(labels)
-
-    id2label = {v: k for v, k in enumerate(labels)}
-    label2id = {k: v for v, k in enumerate(labels)}
-    label2id
-
-    #    Let's test the trained model on the first image of the test set:
-
-    example = datasets["test"][0]
-    print(example.keys())
-
-    # We can visualize the document image using PIL:
-    from PIL import Image, ImageDraw, ImageFont
-
-    image = Image.open(example['image_path'])
-    image = image.convert("RGB")
-    image.show()
-
-    processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased", revision="no_ocr")
-
-    encoded_inputs = processor(image, example['words'], boxes=example['bboxes'], word_labels=example['ner_tags'],
-                               padding="max_length", truncation=True, return_tensors="pt")
-
-    # Next, let's move everything to the GPU, if it's available.
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    labels = encoded_inputs.pop('labels').squeeze().tolist()
-    for k, v in encoded_inputs.items():
-        encoded_inputs[k] = v.to(device)
-
-    # load the fine-tuned model from the hub
-    model = LayoutLMv2ForTokenClassification.from_pretrained("nielsr/layoutlmv2-finetuned-funsd")
-    model.to(device)
-
-    # forward pass
-    outputs = model(**encoded_inputs)
-    print(outputs.logits.shape)
-
-    # Let's create the true predictions, true labels (in terms of label names) as well as the true boxes.
-
-    predictions = outputs.logits.argmax(-1).squeeze().tolist()
-    token_boxes = encoded_inputs.bbox.squeeze().tolist()
-
+def process_image(image):
     width, height = image.size
 
-    true_predictions = [id2label[prediction] for prediction, label in zip(predictions, labels) if label != -100]
-    true_labels = [id2label[label] for prediction, label in zip(predictions, labels) if label != -100]
-    true_boxes = [unnormalize_box(box, width, height) for box, label in zip(token_boxes, labels) if label != -100]
+    # encode
+    encoding = processor(image, truncation=True, return_offsets_mapping=True, return_tensors="pt")
+    offset_mapping = encoding.pop('offset_mapping')
 
-    print(true_predictions)
-    print(true_labels)
-    from PIL import ImageDraw
+    # forward pass
+    outputs = model(**encoding)
 
+    # get predictions
+    predictions = outputs.logits.argmax(-1).squeeze().tolist()
+    token_boxes = encoding.bbox.squeeze().tolist()
+
+    # only keep non-subword predictions
+    is_subword = np.array(offset_mapping.squeeze().tolist())[:, 0] != 0
+    true_predictions = [id2label[pred] for idx, pred in enumerate(predictions) if not is_subword[idx]]
+    true_boxes = [unnormalize_box(box, width, height) for idx, box in enumerate(token_boxes) if not is_subword[idx]]
+
+    # draw predictions over the image
     draw = ImageDraw.Draw(image)
-
     font = ImageFont.load_default()
-
-    def iob_to_label(label):
-        label = label[2:]
-        if not label:
-            return 'other'
-        return label
-
-    label2color = {'question': 'blue', 'answer': 'green', 'header': 'orange', 'other': 'violet'}
 
     for prediction, box in zip(true_predictions, true_boxes):
         predicted_label = iob_to_label(prediction).lower()
         draw.rectangle(box, outline=label2color[predicted_label])
         draw.text((box[0] + 10, box[1] - 10), text=predicted_label, fill=label2color[predicted_label], font=font)
 
-    image.show()
+    return image
 
+
+def main():
+    # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
+    check_min_version("4.5.0")
+    logger = logging.getLogger(__name__)
+
+    resolved = process_image(image)
+    resolved.show()
 
 
 def mainVV():
