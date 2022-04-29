@@ -1,4 +1,5 @@
-from datasets import load_dataset 
+from datasets import load_dataset
+from funsd_dataset import FunsdLikeDataset 
 import torch
 from torch.nn import DataParallel
 from PIL import Image
@@ -17,10 +18,17 @@ device= torch.device('cuda:0' if use_cuda else 'cpu')
 print(device)
 device_ids = [0]
 
-datasets = load_dataset("nielsr/funsd")
+# cache_dir, data_dir
+datasets = load_dataset("funsd_dataset")
+
+#datasets = load_dataset("nielsr/funsd")
 
 labels = datasets['train'].features['ner_tags'].feature.names
+
+print('Labels -> ')
 print(labels)
+
+os.exit()
 
 id2label = {v: k for v, k in enumerate(labels)}
 label2id = {k: v for v, k in enumerate(labels)}
@@ -50,6 +58,7 @@ def preprocess_data(examples):
   
   return encoded_inputs
 
+
 train_dataset = datasets['train'].map(preprocess_data, batched=True, remove_columns=datasets['train'].column_names,
                                       features=features)
 test_dataset = datasets['test'].map(preprocess_data, batched=True, remove_columns=datasets['test'].column_names,
@@ -69,8 +78,8 @@ train_dataset.features.keys()
 
 ##Next, we create corresponding dataloaders.
 
-train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-test_dataloader = DataLoader(test_dataset, batch_size=2)
+train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=1)
 
 ##Let's verify a batch:
 
