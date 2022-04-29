@@ -844,7 +844,7 @@ class LayoutLMv2ForTokenClassification(LayoutLMv2PreTrainedModel):
         head_mask=None,
         inputs_embeds=None,
         labels=None,
-        output_attentions=None,
+        output_attentions=None,   
         output_hidden_states=None,
         return_dict=None,
     ):

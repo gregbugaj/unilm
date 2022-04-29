@@ -2,13 +2,15 @@ from datasets import load_dataset
 import torch
 from torch.nn import DataParallel
 from PIL import Image
-from transformers import LayoutLMv2Processor
 from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 from torch.utils.data import DataLoader
-from transformers import LayoutLMv2ForTokenClassification, AdamW
+from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2Processor, AdamW
 import torch
 from tqdm import tqdm
 from datasets import load_metric
+# Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
+from detectron2.config import get_cfg
+
 
 use_cuda = torch.cuda.is_available()
 device= torch.device('cuda:0' if use_cuda else 'cpu')
