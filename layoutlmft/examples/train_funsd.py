@@ -28,10 +28,11 @@ labels = dataset['train'].features['ner_tags'].feature.names
 print('Labels -> ')
 print(labels)
 
-# os.exit()
+
 
 id2label = {v: k for v, k in enumerate(labels)}
 label2id = {k: v for v, k in enumerate(labels)}
+
 
 ##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 
