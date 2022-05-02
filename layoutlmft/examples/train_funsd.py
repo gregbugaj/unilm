@@ -1,17 +1,18 @@
-from datasets import load_dataset
-from funsd_dataset import FunsdLikeDataset 
+
+# from funsd_dataset.funsd_dataset import FunsdLikeDataset 
 import torch
 from torch.nn import DataParallel
 from PIL import Image
-from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 from torch.utils.data import DataLoader
 from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2Processor, AdamW
 import torch
 from tqdm import tqdm
-from datasets import load_metric
+
 # Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
 from detectron2.config import get_cfg
 
+from datasets import load_dataset, load_metric
+from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 
 use_cuda = torch.cuda.is_available()
 device= torch.device('cuda:0' if use_cuda else 'cpu')
@@ -19,16 +20,15 @@ print(device)
 device_ids = [0]
 
 # cache_dir, data_dir
-datasets = load_dataset("funsd_dataset")
+# dataset = load_dataset("nielsr/funsd")
+dataset = load_dataset("funsd_dataset/funsd_dataset.py")
 
-#datasets = load_dataset("nielsr/funsd")
-
-labels = datasets['train'].features['ner_tags'].feature.names
+labels = dataset['train'].features['ner_tags'].feature.names
 
 print('Labels -> ')
 print(labels)
 
-os.exit()
+# os.exit()
 
 id2label = {v: k for v, k in enumerate(labels)}
 label2id = {k: v for v, k in enumerate(labels)}
@@ -59,9 +59,9 @@ def preprocess_data(examples):
   return encoded_inputs
 
 
-train_dataset = datasets['train'].map(preprocess_data, batched=True, remove_columns=datasets['train'].column_names,
+train_dataset = dataset['train'].map(preprocess_data, batched=True, remove_columns=dataset['train'].column_names,
                                       features=features)
-test_dataset = datasets['test'].map(preprocess_data, batched=True, remove_columns=datasets['test'].column_names,
+test_dataset = dataset['test'].map(preprocess_data, batched=True, remove_columns=dataset['test'].column_names,
                                       features=features)
 
 processor.tokenizer.decode(train_dataset['input_ids'][0])
@@ -78,7 +78,7 @@ train_dataset.features.keys()
 
 ##Next, we create corresponding dataloaders.
 
-train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=1)
 
 ##Let's verify a batch:
@@ -102,7 +102,7 @@ model.to(device)
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 global_step = 0
-num_train_epochs = 6
+num_train_epochs = 5
 t_total = len(train_dataloader) * num_train_epochs # total number of training steps 
 
 # put the model in training mode

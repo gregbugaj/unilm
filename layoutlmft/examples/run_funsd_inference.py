@@ -17,6 +17,10 @@ from transformers import LayoutLMv2Processor, LayoutLMv2FeatureExtractor, Layout
 
 # https://github.com/huggingface/transformers/blob/d3ae2bd3cf9fc1c3c9c9279a8bae740d1fd74f34/tests/layoutlmv2/test_processor_layoutlmv2.py
 
+
+# Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
+from detectron2.config import get_cfg
+
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.5.0")
 logger = logging.getLogger(__name__)
@@ -78,8 +82,8 @@ def main_dataset():
         encoded_inputs[k] = v.to(device)
 
     # load the fine-tuned model from the hub
-    # model = LayoutLMv2ForTokenClassification.from_pretrained("nielsr/layoutlmv2-finetuned-funsd")
-    model = torch.load("./tuned/layoutlmv2-finetuned-funsd-torch.pth")
+    model = LayoutLMv2ForTokenClassification.from_pretrained("nielsr/layoutlmv2-finetuned-funsd")
+    # model = torch.load("./tuned/layoutlmv2-finetuned-funsd-torch.pth")
     model.to(device)
 
     import time

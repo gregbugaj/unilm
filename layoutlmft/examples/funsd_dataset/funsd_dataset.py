@@ -1,4 +1,3 @@
-# coding=utf-8
 import json
 import os
 
@@ -9,13 +8,24 @@ import numpy as np
 
 logger = datasets.logging.get_logger(__name__)
 
-
 _CITATION = """ N/A """
 _DESCRIPTION = """ N/A """
 
 
+def __scale_height(img, target_size, method=Image.LANCZOS):
+    ow, oh = img.size
+    scale = oh / target_size
+    print(scale)
+    w = ow / scale
+    h = target_size  # int(max(oh / scale, crop_size))
+    return img.resize((int(w), int(h)), method)
+
+
 def load_image(image_path):
     image = Image.open(image_path).convert("RGB")
+    # image = __scale_height(image, 1000)
+    # image =image.resize((int(224), int(224)), Image.LANCZOS)
+
     w, h = image.size
     return image, (w, h)
 
@@ -35,18 +45,13 @@ class FunsdConfig(datasets.BuilderConfig):
         Args:
           **kwargs: keyword arguments forwarded to super.
         """
-        print(kwargs)
         super(FunsdConfig, self).__init__(**kwargs)
 
 class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
     """FUNSD LIKE dataset."""
 
-    def __init__(self, **kwargs):
-        print('FundsLikeDataset : ')
-        print(kwargs)
-
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd_like", version=datasets.Version("1.0.0"), description="FUNSD Like dataset"),
+        FunsdConfig(name="funsd_dataset", version=datasets.Version("1.0.0"), description="FUNSD Like dataset"),
     ]
 
     def _info(self):
@@ -59,7 +64,11 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            
+                            # names = ['B-MEMBER_NAME', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME_ANSWER']
+                            names = ['B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
+
                         )
                     ),
                     "image_path": datasets.Value("string"),
@@ -72,13 +81,15 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager):
         """Returns SplitGenerators."""
-        downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
+        # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
+
         return [
             datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
+                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/train_dataset/"}
             ),
             datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
+                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/test_dataset/"}
             ),
         ]
 
