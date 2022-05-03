@@ -28,16 +28,13 @@ def __scale_height(img, target_size, method=Image.LANCZOS):
     return img.resize((int(w), int(h)), method)
 
 
-def load_imageXXXX(image_path):
+def load_image(image_path):
     image = Image.open(image_path).convert("RGB")
-    # image = __scale_height(image, 1000)
-    # image =image.resize((int(224), int(224)), Image.LANCZOS)
-
     w, h = image.size
     return image, (w, h)
 
 
-def load_image(image_path):
+def load_image_224(image_path):
     image = read_image(image_path, format="BGR")
     h = image.shape[0]
     w = image.shape[1]
@@ -82,8 +79,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
-                            names = ['B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
+                            names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            # names = ['B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
                         )
                     ),
                     "image_path": datasets.Value("string"),
@@ -98,11 +95,11 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
-        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer/"
+        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer"
 
         return [
             datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/test_dataset/"}
+                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/train_dataset/"}
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/test_dataset/"}

@@ -163,6 +163,7 @@ def main():
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples):
+        print(text_column_name)
         tokenized_inputs = tokenizer(
             examples[text_column_name],
             padding=padding,

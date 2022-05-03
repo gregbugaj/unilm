@@ -32,3 +32,12 @@ For help or issues using layoutlmft, please submit a GitHub issue.
 
 For other communications related to layoutlmft, please contact Lei Cui (`lecu@microsoft.com`), Furu Wei (`fuwei@microsoft.com`).
 
+
+```
+
+python ./run_funsd.py --do_eval=True --do_predict=True --do_train=True --evaluation_strategy=epoch --fp16=True --load_best_model_at_end=True --max_train_samples=1000 --model_name_or_path=microsoft/layoutlmv2-base-uncased --num_train_epochs=30 --output_dir=/tmp/test-ner --overwrite_output_dir=True --report_to=wandb --save_strategy=epoch --save_total_limit=1 --warmup_ratio=0.1
+
+
+python ./run_funsd.py --do_eval=True --do_predict=True --do_train=True --evaluation_strategy=epoch --fp16=True --load_best_model_at_end=True --max_train_samples=1000 --model_name_or_path=microsoft/layoutlmv2-base-uncased --num_train_epochs=30 --output_dir=/tmp/test-ner --overwrite_output_dir=True --report_to=wandb --save_strategy=epoch --save_total_limit=1 --warmup_ratio=0.1
+
+```

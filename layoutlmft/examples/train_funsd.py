@@ -23,16 +23,27 @@ device_ids = [0]
 # dataset = load_dataset("nielsr/funsd")
 dataset = load_dataset("funsd_dataset/funsd_dataset.py")
 
+
+# print(dataset['train'].features)
+print(dataset['train'].features['bboxes'])
+
 labels = dataset['train'].features['ner_tags'].feature.names
 
-print('Labels -> ')
+print('NER-Labels -> ')
 print(labels)
 
-
+# os.exit()
 
 id2label = {v: k for v, k in enumerate(labels)}
 label2id = {k: v for v, k in enumerate(labels)}
 
+print("ID2Label : ")
+print(id2label)
+print(label2id)
+
+
+# {0: 'O', 1: 'B-HEADER', 2: 'I-HEADER', 3: 'B-QUESTION', 4: 'I-QUESTION', 5: 'B-ANSWER', 6: 'I-ANSWER'}
+# {'O': 0, 'B-HEADER': 1, 'I-HEADER': 2, 'B-QUESTION': 3, 'I-QUESTION': 4, 'B-ANSWER': 5, 'I-ANSWER': 6}
 
 ##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 
@@ -103,7 +114,7 @@ model.to(device)
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 global_step = 0
-num_train_epochs = 5
+num_train_epochs = 10
 t_total = len(train_dataloader) * num_train_epochs # total number of training steps 
 
 # put the model in training mode
