@@ -28,17 +28,17 @@ def __scale_height(img, target_size, method=Image.LANCZOS):
     return img.resize((int(w), int(h)), method)
 
 
-def load_image(image_path):
+def load_imageXXX(image_path):
     image = Image.open(image_path).convert("RGB")
     w, h = image.size
     return image, (w, h)
 
 
-def load_image_224(image_path):
+def load_image(image_path):
     image = read_image(image_path, format="BGR")
     h = image.shape[0]
     w = image.shape[1]
-    img_trans = TransformList([ResizeTransform(h=h, w=w, new_h=224, new_w=224, interp=None)])
+    img_trans = TransformList([ResizeTransform(h=h, w=w, new_h=224, new_w=224, interp=Image.LANCZOS)])
     image = torch.tensor(img_trans.apply_image(image).copy()).permute(2, 0, 1)  # copy to make it writeable
     return image, (w, h)
 
@@ -79,8 +79,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
-                            # names = ['B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
+                            # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            names = ['B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
                         )
                     ),
                     "image_path": datasets.Value("string"),
@@ -94,8 +94,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
     def _split_generators(self, dl_manager):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
-        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
-        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer"
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
+        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer"
 
         return [
             datasets.SplitGenerator(
