@@ -23,6 +23,7 @@ device_ids = [0]
 # dataset = load_dataset("nielsr/funsd")
 dataset = load_dataset("funsd_dataset/funsd_dataset.py")
 
+# https://towardsdatascience.com/fine-tuning-transformer-model-for-invoice-recognition-1e55869336d4
 
 # print(dataset['train'].features)
 print(dataset['train'].features['bboxes'])
@@ -41,9 +42,6 @@ print("ID2Label : ")
 print(id2label)
 print(label2id)
 
-
-# {0: 'O', 1: 'B-HEADER', 2: 'I-HEADER', 3: 'B-QUESTION', 4: 'I-QUESTION', 5: 'B-ANSWER', 6: 'I-ANSWER'}
-# {'O': 0, 'B-HEADER': 1, 'I-HEADER': 2, 'B-QUESTION': 3, 'I-QUESTION': 4, 'B-ANSWER': 5, 'I-ANSWER': 6}
 
 ##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 
@@ -71,6 +69,9 @@ def preprocess_data(examples):
   return encoded_inputs
 
 
+# We should us this to train on all words
+# only_label_first_subword
+
 train_dataset = dataset['train'].map(preprocess_data, batched=True, remove_columns=dataset['train'].column_names,
                                       features=features)
 test_dataset = dataset['test'].map(preprocess_data, batched=True, remove_columns=dataset['test'].column_names,
@@ -79,7 +80,6 @@ test_dataset = dataset['test'].map(preprocess_data, batched=True, remove_columns
 processor.tokenizer.decode(train_dataset['input_ids'][0])
 
 print(train_dataset['labels'][0])
-processor.save_pretrained("./tuned")
 
 ##Finally, let's set the format to PyTorch, and place everything on the GPU:
 
@@ -90,13 +90,14 @@ train_dataset.features.keys()
 
 ##Next, we create corresponding dataloaders.
 
-train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=1)
 
 ##Let's verify a batch:
 
 batch = next(iter(train_dataloader))
 
+print("Batch verification : ")
 for k,v in batch.items():
   print(k, v.shape)
 
@@ -114,7 +115,7 @@ model.to(device)
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 global_step = 0
-num_train_epochs = 10
+num_train_epochs = 5
 t_total = len(train_dataloader) * num_train_epochs # total number of training steps 
 
 # put the model in training mode
@@ -150,7 +151,7 @@ metric = load_metric("seqeval")
 # put model in evaluation mode
 model.eval()
 for batch in tqdm(test_dataloader, desc="Evaluating"):
-    with torch.no_grad():
+    with torch.no_grad():        
         input_ids = batch['input_ids'].to(device)
         bbox = batch['bbox'].to(device)
         image = batch['image'].to(device)
@@ -179,3 +180,8 @@ for batch in tqdm(test_dataloader, desc="Evaluating"):
 
 final_score = metric.compute()
 print(final_score)
+
+
+
+
+# {'DOS': {'precision': 0.9047619047619048, 'recall': 0.95, 'f1': 0.9268292682926829, 'number': 20}, 'DOS_ANSWER': {'precision': 0.7916666666666666, 'recall': 0.95, 'f1': 0.8636363636363635, 'number': 20}, 'MEMBER_NAME': {'precision': 0.5, 'recall': 0.6666666666666666, 'f1': 0.5714285714285715, 'number': 18}, 'MEMBER_NAME_ANSWER': {'precision': 0.0, 'recall': 0.0, 'f1': 0.0, 'number': 18}, 'MEMBER_NUMBER': {'precision': 0.7142857142857143, 'recall': 0.8333333333333334, 'f1': 0.7692307692307692, 'number': 30}, 'MEMBER_NUMBER_ANSWER': {'precision': 0.6585365853658537, 'recall': 0.9, 'f1': 0.7605633802816902, 'number': 30}, 'PAN': {'precision': 0.0, 'recall': 0.0, 'f1': 0.0, 'number': 6}, 'PAN_ANSWER': {'precision': 0.0, 'recall': 0.0, 'f1': 0.0, 'number': 6}, 'PATIENT_NAME': {'precision': 0.5833333333333334, 'recall': 0.7, 'f1': 0.6363636363636365, 'number': 20}, 'PATIENT_NAME_ANSWER': {'precision': 0.5128205128205128, 'recall': 1.0, 'f1': 0.6779661016949152, 'number': 20}, 'overall_precision': 0.6210045662100456, 'overall_recall': 0.723404255319149, 'overall_f1': 0.6683046683046684, 'overall_accuracy': 0.989491335941867}
