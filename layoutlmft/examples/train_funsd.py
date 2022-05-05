@@ -14,6 +14,11 @@ from detectron2.config import get_cfg
 from datasets import load_dataset, load_metric
 from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 
+
+# https://towardsdatascience.com/fine-tuning-transformer-model-for-invoice-recognition-1e55869336d4
+# https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLM/Add_image_embeddings_to_LayoutLM.ipynb#scrollTo=VMYoOQuyp4NT
+
+
 use_cuda = torch.cuda.is_available()
 device= torch.device('cuda:0' if use_cuda else 'cpu')
 print(device)
@@ -22,8 +27,6 @@ device_ids = [0]
 # cache_dir, data_dir
 # dataset = load_dataset("nielsr/funsd")
 dataset = load_dataset("funsd_dataset/funsd_dataset.py")
-
-# https://towardsdatascience.com/fine-tuning-transformer-model-for-invoice-recognition-1e55869336d4
 
 # print(dataset['train'].features)
 print(dataset['train'].features['bboxes'])
