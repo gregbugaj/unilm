@@ -93,7 +93,7 @@ train_dataset.features.keys()
 
 ##Next, we create corresponding dataloaders.
 
-train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=1)
 
 ##Let's verify a batch:
@@ -107,8 +107,8 @@ for k,v in batch.items():
 ## Train the model
 ##Here we train the model in native PyTorch. We use the AdamW optimizer.
 
-model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased',
-                                                          num_labels=len(labels))
+model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
+                                                         
 
 if use_cuda:
     model = DataParallel(model,device_ids=device_ids)

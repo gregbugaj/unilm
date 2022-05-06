@@ -28,13 +28,13 @@ def __scale_height(img, target_size, method=Image.LANCZOS):
     return img.resize((int(w), int(h)), method)
 
 
-def load_imageXXX(image_path):
+def load_image(image_path):
     image = Image.open(image_path).convert("RGB")
     w, h = image.size
     return image, (w, h)
 
 
-def load_image(image_path):
+def load_imageXXX(image_path):
     image = read_image(image_path, format="BGR")
     h = image.shape[0]
     w = image.shape[1]
@@ -78,8 +78,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
-                            names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
+                            names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            # names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
                         )
                     ),
                     "image_path": datasets.Value("string"),
@@ -94,14 +94,17 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
+        downloaded_file = "/home/greg/dataset/funsd"
+
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer"
 
         return [
             datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/train_dataset/"}
+                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
             ),
             datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/test_dataset/"}
+                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
             ),
         ]
 
@@ -139,3 +142,5 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                         bboxes.append(normalize_bbox(w["box"], size))
             yield guid, {"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
             
+
+            # i love uncle tom puppy6+6-1205+05-001 001+001-002 002+002-004 004+004-008love froyizabella anddady
