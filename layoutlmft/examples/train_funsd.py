@@ -104,7 +104,7 @@ print("Batch verification : ")
 for k,v in batch.items():
   print(k, v.shape)
 
-## Train the model
+##Train the model
 ##Here we train the model in native PyTorch. We use the AdamW optimizer.
 
 model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
@@ -137,9 +137,13 @@ for epoch in range(num_train_epochs):
         if global_step % 100 == 0:
           print(f"Loss after {global_step} steps: {loss.item()}")
 
+
         loss.backward()
         optimizer.step()
         global_step += 1
+    
+   print(f"Saving epoch {epoch}  loss : {loss.item()}")
+   torch.save(model, f"./tuned/layoutlmv2-finetuned-funsd-torch_epoch_{epoch}.pth")
 
 
 # torch.save(model.state_dict(), "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
@@ -183,8 +187,3 @@ for batch in tqdm(test_dataloader, desc="Evaluating"):
 
 final_score = metric.compute()
 print(final_score)
-
-
-
-
-# {'DOS': {'precision': 0.9047619047619048, 'recall': 0.95, 'f1': 0.9268292682926829, 'number': 20}, 'DOS_ANSWER': {'precision': 0.7916666666666666, 'recall': 0.95, 'f1': 0.8636363636363635, 'number': 20}, 'MEMBER_NAME': {'precision': 0.5, 'recall': 0.6666666666666666, 'f1': 0.5714285714285715, 'number': 18}, 'MEMBER_NAME_ANSWER': {'precision': 0.0, 'recall': 0.0, 'f1': 0.0, 'number': 18}, 'MEMBER_NUMBER': {'precision': 0.7142857142857143, 'recall': 0.8333333333333334, 'f1': 0.7692307692307692, 'number': 30}, 'MEMBER_NUMBER_ANSWER': {'precision': 0.6585365853658537, 'recall': 0.9, 'f1': 0.7605633802816902, 'number': 30}, 'PAN': {'precision': 0.0, 'recall': 0.0, 'f1': 0.0, 'number': 6}, 'PAN_ANSWER': {'precision': 0.0, 'recall': 0.0, 'f1': 0.0, 'number': 6}, 'PATIENT_NAME': {'precision': 0.5833333333333334, 'recall': 0.7, 'f1': 0.6363636363636365, 'number': 20}, 'PATIENT_NAME_ANSWER': {'precision': 0.5128205128205128, 'recall': 1.0, 'f1': 0.6779661016949152, 'number': 20}, 'overall_precision': 0.6210045662100456, 'overall_recall': 0.723404255319149, 'overall_f1': 0.6683046683046684, 'overall_accuracy': 0.989491335941867}

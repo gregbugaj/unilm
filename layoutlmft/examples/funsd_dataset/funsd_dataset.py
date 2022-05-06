@@ -78,8 +78,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
-                            # names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
+                            # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
                         )
                     ),
                     "image_path": datasets.Value("string"),
@@ -96,8 +96,9 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
         downloaded_file = "/home/greg/dataset/funsd"
+        # downloaded_file = "/home/gbugaj/dataset/funsd"
 
-        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer"
+        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
 
         return [
             datasets.SplitGenerator(
@@ -125,6 +126,13 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
             for item in data["form"]:
                 words_example, label = item["words"], item["label"]
                 words_example = [w for w in words_example if w["text"].strip() != ""]
+
+
+                # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                # _label = "QUESTION"
+                # if label.find("answer") > -1:
+                #     _label = "ANSWER"
+
                 if len(words_example) == 0:
                     continue
                 if label == "other":
@@ -133,6 +141,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                         ner_tags.append("O")
                         bboxes.append(normalize_bbox(w["box"], size))
                 else:
+                    # label = _label
                     words.append(words_example[0]["text"])
                     ner_tags.append("B-" + label.upper())
                     bboxes.append(normalize_bbox(words_example[0]["box"], size))
@@ -140,7 +149,9 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                         words.append(w["text"])
                         ner_tags.append("I-" + label.upper())
                         bboxes.append(normalize_bbox(w["box"], size))
-            yield guid, {"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
+
+                words_lower = [w.lower() for w in words]
+            yield guid, {"id": str(guid), "words": words_lower, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
             
 
             # i love uncle tom puppy6+6-1205+05-001 001+001-002 002+002-004 004+004-008love froyizabella anddady
