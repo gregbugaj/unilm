@@ -132,7 +132,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                 # _label = "QUESTION"
                 # if label.find("answer") > -1:
                 #     _label = "ANSWER"
-
+                # label first token as B-label (beginning), label all remaining tokens as I-label (inside)
+                
                 if len(words_example) == 0:
                     continue
                 if label == "other":

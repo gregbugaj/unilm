@@ -14,6 +14,9 @@ from detectron2.config import get_cfg
 from datasets import load_dataset, load_metric
 from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 
+import warnings 
+warnings.filterwarnings('ignore')
+
 
 # https://towardsdatascience.com/fine-tuning-transformer-model-for-invoice-recognition-1e55869336d4
 # https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLM/Add_image_embeddings_to_LayoutLM.ipynb#scrollTo=VMYoOQuyp4NT
@@ -25,9 +28,9 @@ print(device)
 device_ids = [0]
 
 # cache_dir, data_dir
-# dataset = load_dataset("nielsr/funsd")
+dataset = load_dataset("nielsr/funsd")
 dataset = load_dataset("funsd_dataset/funsd_dataset.py")
-
+ 
 # print(dataset['train'].features)
 print(dataset['train'].features['bboxes'])
 
@@ -44,7 +47,6 @@ label2id = {k: v for v, k in enumerate(labels)}
 print("ID2Label : ")
 print(id2label)
 print(label2id)
-
 
 ##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 
@@ -66,9 +68,8 @@ def preprocess_data(examples):
   boxes = examples['bboxes']
   word_labels = examples['ner_tags']
   
-  encoded_inputs = processor(images, words, boxes=boxes, word_labels=word_labels,
-                             padding="max_length", truncation=True)
-  
+  encoded_inputs = processor(images, words, boxes=boxes, word_labels=word_labels,padding="max_length", truncation=True)
+
   return encoded_inputs
 
 
@@ -80,16 +81,24 @@ train_dataset = dataset['train'].map(preprocess_data, batched=True, remove_colum
 test_dataset = dataset['test'].map(preprocess_data, batched=True, remove_columns=dataset['test'].column_names,
                                       features=features)
 
-processor.tokenizer.decode(train_dataset['input_ids'][0])
 
-print(train_dataset['labels'][0])
+print("Data size: ")
+print(f"Data train: {len(train_dataset)}")
+print(f"Data test: {len(test_dataset)}")
 
 ##Finally, let's set the format to PyTorch, and place everything on the GPU:
 
 train_dataset.set_format(type="torch", device=device)
 test_dataset.set_format(type="torch", device=device)
 
-train_dataset.features.keys()
+print(f'keys : {train_dataset.features.keys()}')
+
+decoded = processor.tokenizer.decode(train_dataset['input_ids'][0])
+print(decoded)
+
+print('Train labels **************')
+print(train_dataset['labels'][0])
+
 
 ##Next, we create corresponding dataloaders.
 
@@ -104,21 +113,21 @@ print("Batch verification : ")
 for k,v in batch.items():
   print(k, v.shape)
 
+# os.exit()
+
 ##Train the model
 ##Here we train the model in native PyTorch. We use the AdamW optimizer.
 
 model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
                                                          
-
-if use_cuda:
-    model = DataParallel(model,device_ids=device_ids)
-
+# if use_cuda:
+#     model = DataParallel(model,device_ids=device_ids)
 model.to(device)
 
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 global_step = 0
-num_train_epochs = 5
+num_train_epochs = 4
 t_total = len(train_dataloader) * num_train_epochs # total number of training steps 
 
 # put the model in training mode
@@ -143,11 +152,11 @@ for epoch in range(num_train_epochs):
         global_step += 1
     
    print(f"Saving epoch {epoch}  loss : {loss.item()}")
-   torch.save(model, f"./tuned/layoutlmv2-finetuned-funsd-torch_epoch_{epoch}.pth")
+  #  torch.save(model, f"./tuned/layoutlmv2-finetuned-funsd-torch_epoch_{epoch}.pth")
+   model.save_pretrained(f"./tuned")
 
-
-# torch.save(model.state_dict(), "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
-torch.save(model, "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
+# # torch.save(model.state_dict(), "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
+# torch.save(model, "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
 
 ## Evaluation
 
