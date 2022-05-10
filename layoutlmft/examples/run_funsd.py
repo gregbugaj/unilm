@@ -157,12 +157,18 @@ def main():
             "requirement"
         )
 
+
+    print('Tokenzier type : ')
+    print(type(tokenizer))
+    os.exit()
     # Preprocessing the dataset
     # Padding strategy
     padding = "max_length" if data_args.pad_to_max_length else False
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples):
+
+        print("-----------")
         print(text_column_name)
         tokenized_inputs = tokenizer(
             examples[text_column_name],

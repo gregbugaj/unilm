@@ -1,11 +1,14 @@
+import os
+
 
 # from funsd_dataset.funsd_dataset import FunsdLikeDataset 
+import numpy as np
 import torch
 from torch.nn import DataParallel
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
+
 from torch.utils.data import DataLoader
 from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2Processor, AdamW
-import torch
 from tqdm import tqdm
 
 # Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
@@ -17,10 +20,23 @@ from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 import warnings 
 warnings.filterwarnings('ignore')
 
+# Spliting into multiple words/tokens
+# https://github.com/NielsRogge/Transformers-Tutorials/issues/41
 
 # https://towardsdatascience.com/fine-tuning-transformer-model-for-invoice-recognition-1e55869336d4
 # https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLM/Add_image_embeddings_to_LayoutLM.ipynb#scrollTo=VMYoOQuyp4NT
+# https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv2/CORD/Fine_tuning_LayoutLMv2ForTokenClassification_on_CORD.ipynb#scrollTo=NxahVHZ0NKq7
 
+# Complete CORD
+# https://github.com/katanaml/sparrow/blob/f18591947f2b1e26fbac045ba430e73af2c68f0c/research/app/Fine_tuning_LayoutLMv2ForTokenClassification_on_CORD_using_HuggingFace_Trainer_ipynb.ipynb
+
+
+# Sequence classificatin
+# https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv2/RVL-CDIP/Fine_tuning_LayoutLMv2ForSequenceClassification_on_RVL_CDIP.ipynb
+
+
+# {'ANSWER': {'precision': 0.6618106139438086, 'recall': 0.7861557478368356, 'f1': 0.7186440677966102, 'number': 809}, 'HEADER': {'precision': 0.4625, 'recall': 0.31092436974789917, 'f1': 0.3718592964824121, 'number': 119}, 'QUESTION': {'precision': 0.7798085291557877, 'recall': 0.8413145539906103, 'f1': 0.8093947606142727, 'number': 1065}, 'overall_precision': 0.7164383561643836, 'overall_recall': 0.787255393878575, 'overall_f1': 0.7501792971551519, 'overall_accuracy': 0.679780527667522
+# {'ANSWER': {'precision': 0.6998904709748083, 'recall': 0.7898640296662547, 'f1': 0.7421602787456447, 'number': 809}, 'HEADER': {'precision': 0.4375, 'recall': 0.17647058823529413, 'f1': 0.25149700598802394, 'number': 119}, 'QUESTION': {'precision': 0.8159448818897638, 'recall': 0.7784037558685446, 'f1': 0.7967323402210476, 'number': 1065}, 'overall_precision': 0.7531613555892767, 'overall_recall': 0.7471149021575514, 'overall_f1': 0.7501259445843829, 'overall_accuracy': 0.7541442913845435}
 
 use_cuda = torch.cuda.is_available()
 device= torch.device('cuda:0' if use_cuda else 'cpu')
@@ -28,7 +44,7 @@ print(device)
 device_ids = [0]
 
 # cache_dir, data_dir
-dataset = load_dataset("nielsr/funsd")
+# dataset = load_dataset("nielsr/funsd")
 dataset = load_dataset("funsd_dataset/funsd_dataset.py")
  
 # print(dataset['train'].features)
@@ -68,7 +84,7 @@ def preprocess_data(examples):
   boxes = examples['bboxes']
   word_labels = examples['ner_tags']
   
-  encoded_inputs = processor(images, words, boxes=boxes, word_labels=word_labels,padding="max_length", truncation=True)
+  encoded_inputs = processor(images, words, boxes=boxes, word_labels=word_labels, padding="max_length", truncation=True)
 
   return encoded_inputs
 
@@ -86,6 +102,10 @@ print("Data size: ")
 print(f"Data train: {len(train_dataset)}")
 print(f"Data test: {len(test_dataset)}")
 
+
+print(train_dataset)
+print(test_dataset)
+
 ##Finally, let's set the format to PyTorch, and place everything on the GPU:
 
 train_dataset.set_format(type="torch", device=device)
@@ -98,7 +118,6 @@ print(decoded)
 
 print('Train labels **************')
 print(train_dataset['labels'][0])
-
 
 ##Next, we create corresponding dataloaders.
 
@@ -114,12 +133,18 @@ for k,v in batch.items():
   print(k, v.shape)
 
 # os.exit()
+os.makedirs(f"./checkpoints", exist_ok = True)
 
 ##Train the model
 ##Here we train the model in native PyTorch. We use the AdamW optimizer.
 
 model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
-                                                         
+
+
+# Set id2label and label2id
+model.config.id2label = id2label
+model.config.label2id = label2id
+
 # if use_cuda:
 #     model = DataParallel(model,device_ids=device_ids)
 model.to(device)
@@ -127,7 +152,7 @@ model.to(device)
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 global_step = 0
-num_train_epochs = 4
+num_train_epochs = 2
 t_total = len(train_dataloader) * num_train_epochs # total number of training steps 
 
 # put the model in training mode
@@ -152,8 +177,8 @@ for epoch in range(num_train_epochs):
         global_step += 1
     
    print(f"Saving epoch {epoch}  loss : {loss.item()}")
-  #  torch.save(model, f"./tuned/layoutlmv2-finetuned-funsd-torch_epoch_{epoch}.pth")
-   model.save_pretrained(f"./tuned")
+  #  torch.save(model, f"./tuned/layoutlmv2-finetuned-funsd-torch_epoch_{epoch}.pth")   
+   model.save_pretrained(f"./checkpoints")
 
 # # torch.save(model.state_dict(), "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
 # torch.save(model, "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
@@ -166,6 +191,7 @@ metric = load_metric("seqeval")
 
 # put model in evaluation mode
 model.eval()
+index = 0
 for batch in tqdm(test_dataloader, desc="Evaluating"):
     with torch.no_grad():        
         input_ids = batch['input_ids'].to(device)
@@ -175,6 +201,8 @@ for batch in tqdm(test_dataloader, desc="Evaluating"):
         token_type_ids = batch['token_type_ids'].to(device)
         labels = batch['labels'].to(device)
 
+        # print("labels::")
+        # print(labels)
         # forward pass
         outputs = model(input_ids=input_ids, bbox=bbox, image=image, attention_mask=attention_mask, 
                         token_type_ids=token_type_ids, labels=labels)
@@ -187,12 +215,44 @@ for batch in tqdm(test_dataloader, desc="Evaluating"):
             [id2label[p.item()] for (p, l) in zip(prediction, label) if l != -100]
             for prediction, label in zip(predictions, labels)
         ]
+        
         true_labels = [
             [id2label[l.item()] for (p, l) in zip(prediction, label) if l != -100]
             for prediction, label in zip(predictions, labels)
         ]
 
+
         metric.add_batch(predictions=true_predictions, references=true_labels)
+
+        print('Eval info : ***********************')
+        print(true_labels)
+        print(true_predictions)
+        print(image.shape)
+
+        img = Image.fromarray((image[0].cpu()).numpy().astype(np.uint8).transpose(1, 2, 0))
+        img.save(f'/tmp/tensors/{index}.png')
+        
+        if False:
+          draw = ImageDraw.Draw(img)
+          font = ImageFont.load_default()
+          bb = bbox[0].cpu().numpy()
+
+          print('BBOXES')
+          print(bb)
+          for i, box in enumerate(bb):
+              print(box)
+              if box[3] == 0:
+                continue
+              # box = item["box"]
+              # text = item["text"]
+              text = 'Label'
+              # draw.rectangle(box, outline="red")
+              draw.text((box[0], box[1]), text=text, fill="blue", font=font)
+
+          img.save(f'/tmp/tensors/bbox_{index}.png')
+
+
+        index=index+1
 
 final_score = metric.compute()
 print(final_score)

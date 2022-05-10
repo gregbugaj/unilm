@@ -3,9 +3,8 @@ import os
 
 import datasets
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
-
 
 import torch
 
@@ -17,15 +16,6 @@ logger = datasets.logging.get_logger(__name__)
 
 _CITATION = """ N/A """
 _DESCRIPTION = """ N/A """
-
-
-def __scale_height(img, target_size, method=Image.LANCZOS):
-    ow, oh = img.size
-    scale = oh / target_size
-    print(scale)
-    w = ow / scale
-    h = target_size  # int(max(oh / scale, crop_size))
-    return img.resize((int(w), int(h)), method)
 
 
 def load_image(image_path):
@@ -44,12 +34,14 @@ def load_imageXXX(image_path):
 
 
 def normalize_bbox(bbox, size):
-    return [
+    res = [
         int(1000 * bbox[0] / size[0]),
         int(1000 * bbox[1] / size[1]),
         int(1000 * bbox[2] / size[0]),
         int(1000 * bbox[3] / size[1]),
     ]
+    # print(f"  >  {bbox}  ->  {res}")
+    return res
 
 class FunsdConfig(datasets.BuilderConfig):
     """BuilderConfig for FUNSD"""
@@ -96,8 +88,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
         downloaded_file = "/home/greg/dataset/funsd"
-        # downloaded_file = "/home/gbugaj/dataset/funsd"
-
+        downloaded_file = "/home/gbugaj/dataset/funsd"
         downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
 
         return [
@@ -113,11 +104,16 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         logger.info("⏳ Generating examples from = %s", filepath)
         ann_dir = os.path.join(filepath, "annotations")
         img_dir = os.path.join(filepath, "images")
+        font = ImageFont.load_default()
+
         for guid, file in enumerate(sorted(os.listdir(ann_dir))):
             words = []
             bboxes = []
             ner_tags = []
             file_path = os.path.join(ann_dir, file)
+
+            bboxes_raw = []
+
             with open(file_path, "r", encoding="utf8") as f:
                 data = json.load(f)
             image_path = os.path.join(img_dir, file)
@@ -126,7 +122,6 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
             for item in data["form"]:
                 words_example, label = item["words"], item["label"]
                 words_example = [w for w in words_example if w["text"].strip() != ""]
-
 
                 # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
                 # _label = "QUESTION"
@@ -141,18 +136,32 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                         words.append(w["text"])
                         ner_tags.append("O")
                         bboxes.append(normalize_bbox(w["box"], size))
+                        bboxes_raw.append(w["box"])
                 else:
                     # label = _label
                     words.append(words_example[0]["text"])
                     ner_tags.append("B-" + label.upper())
                     bboxes.append(normalize_bbox(words_example[0]["box"], size))
+
+                    bboxes_raw.append(words_example[0]["box"])
+
                     for w in words_example[1:]:
                         words.append(w["text"])
                         ner_tags.append("I-" + label.upper())
                         bboxes.append(normalize_bbox(w["box"], size))
+                        bboxes_raw.append(w["box"])
 
-                words_lower = [w.lower() for w in words]
-            yield guid, {"id": str(guid), "words": words_lower, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
+                # words_lower = [w.lower() for w in words]
+                # print("payload : ")
+                # print ({"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path})
+                # draw predictions over the image
+
+                if False:
+                    draw = ImageDraw.Draw(image)
+                    for tag, box in zip(ner_tags, bboxes_raw):
+                        draw.rectangle(box, outline='red')
+                        draw.text((box[0] + 10, box[1] - 10), text=tag, fill='red', font=font, width=1)
+                    image.save(f"/tmp/snippet/{guid}.png")
+
+            yield guid, {"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
             
-
-            # i love uncle tom puppy6+6-1205+05-001 001+001-002 002+002-004 004+004-008love froyizabella anddady
