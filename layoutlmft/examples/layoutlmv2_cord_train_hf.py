@@ -43,7 +43,7 @@ def preprocess_data(examples):
     word_labels = examples['ner_tags']
 
     encoded_inputs = processor(images, words, boxes=boxes, word_labels=word_labels,
-                               padding="max_length", truncation=True)
+                               padding="max_length", truncation=True, verbose=True)
 
     return encoded_inputs
 
@@ -161,17 +161,18 @@ args = TrainingArguments(
     overwrite_output_dir=True,
     do_train=True,
     do_eval=True,
-    num_train_epochs=15,
+    num_train_epochs=500,
     logging_steps=250,
     logging_first_step=True,
-    save_steps=250,
+    save_steps=500,
     load_best_model_at_end=True,
     # evaluation_strategy='epoch',
     # save_strategy='epoch',
     seed=0,
     evaluation_strategy="steps",
     eval_steps=250,
-    fp16=True,  # we use mixed precision (less memory consumption), False when on CPU
+    fp16=True,  # we use mixed precision (less memory consumption), False when on CPU,
+    log_level = 'debug'
 )
 
 
