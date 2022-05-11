@@ -8,10 +8,6 @@ import numpy as np
 
 import torch
 
-from detectron2.data.detection_utils import read_image
-from detectron2.data.transforms import ResizeTransform, TransformList
-
-
 logger = datasets.logging.get_logger(__name__)
 
 _CITATION = """ N/A """
@@ -25,6 +21,9 @@ def load_image(image_path):
 
 
 def load_imageXXX(image_path):
+    from detectron2.data.detection_utils import read_image
+    from detectron2.data.transforms import ResizeTransform, TransformList
+
     image = read_image(image_path, format="BGR")
     h = image.shape[0]
     w = image.shape[1]
@@ -57,7 +56,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
     """FUNSD LIKE dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd_dataset", version=datasets.Version("1.0.0"), description="FUNSD Like dataset"),
+        FunsdConfig(name="funsd_dataset", version=datasets.Version("1.1.0"), description="FUNSD Like dataset"),
     ]
 
     def _info(self):
@@ -86,10 +85,10 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer"
-        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
-        downloaded_file = "/home/greg/dataset/funsd"
-        downloaded_file = "/home/gbugaj/dataset/funsd"
-        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"                          
+        # downloaded_file = "/home/greg/dataset/funsd"
+        # downloaded_file = "/home/gbugaj/dataset/funsd"
+        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
 
         return [
             datasets.SplitGenerator(

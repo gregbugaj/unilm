@@ -1,7 +1,10 @@
+from genericpath import exists
+import os
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoConfig, EvalPrediction, Trainer, TrainingArguments
 
-# cord = load_dataset("katanaml/cord")
+# Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
+from detectron2.config import get_cfg
 
 # cache_dir, data_dir
 # cord = load_dataset("nielsr/funsd")
@@ -73,7 +76,7 @@ print(train_dataset['input_ids'][0])
 
 from torch.utils.data import DataLoader
 
-train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=1)
 
 #
@@ -155,9 +158,18 @@ class CordTrainer(Trainer):
             return test_dataloader
 
 
+
+from pathlib import Path
+home = str(Path.home())
+output_dir = os.path.join(home, './tmp/models/layoutlmv2-finetuned-gb')
+
+print(f"output dir : {output_dir}")
+os.makedirs(output_dir, exist_ok=True)
+
+
 args = TrainingArguments(
     warmup_ratio=0.1,  # we warmup a bit
-    output_dir="/tmp/models/layoutlmv2-finetuned-cord",
+    output_dir=output_dir,
     overwrite_output_dir=True,
     do_train=True,
     do_eval=True,
@@ -171,7 +183,7 @@ args = TrainingArguments(
     seed=0,
     evaluation_strategy="steps",
     eval_steps=250,
-    fp16=True,  # we use mixed precision (less memory consumption), False when on CPU,
+    fp16=False,  # we use mixed precision (less memory consumption), False when on CPU,
     log_level = 'debug'
 )
 
@@ -186,7 +198,7 @@ trainer = CordTrainer(
 #
 
 trainer.train()
-trainer.save_model(f'/tmp/models/layoutlmv2-finetuned-cord')
+trainer.save_model(output_dir)
 
 #
 
