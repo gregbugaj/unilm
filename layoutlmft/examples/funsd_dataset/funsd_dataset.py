@@ -69,7 +69,6 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
                             names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
                         )
                     ),
@@ -88,7 +87,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"                          
         # downloaded_file = "/home/greg/dataset/funsd"
         # downloaded_file = "/home/gbugaj/dataset/funsd"
-        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
+        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
 
         return [
             datasets.SplitGenerator(
@@ -122,12 +121,6 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                 words_example, label = item["words"], item["label"]
                 words_example = [w for w in words_example if w["text"].strip() != ""]
 
-                # names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
-                # _label = "QUESTION"
-                # if label.find("answer") > -1:
-                #     _label = "ANSWER"
-                # label first token as B-label (beginning), label all remaining tokens as I-label (inside)
-                
                 if len(words_example) == 0:
                     continue
                 if label == "other":
@@ -150,7 +143,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                         bboxes.append(normalize_bbox(w["box"], size))
                         bboxes_raw.append(w["box"])
 
-                # words_lower = [w.lower() for w in words]
+                words_lower = [w.lower() for w in words]
                 # print("payload : ")
                 # print ({"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path})
                 # draw predictions over the image
@@ -162,5 +155,5 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                         draw.text((box[0] + 10, box[1] - 10), text=tag, fill='red', font=font, width=1)
                     image.save(f"/tmp/snippet/{guid}.png")
 
-            yield guid, {"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
+            yield guid, {"id": str(guid), "words": words_lower, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
             

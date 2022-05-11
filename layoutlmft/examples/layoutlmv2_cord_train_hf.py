@@ -76,7 +76,7 @@ print(train_dataset['input_ids'][0])
 
 from torch.utils.data import DataLoader
 
-train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=1)
 
 #
