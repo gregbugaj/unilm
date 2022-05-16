@@ -88,6 +88,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         # downloaded_file = "/home/greg/dataset/funsd"
         # downloaded_file = "/home/gbugaj/dataset/funsd"
         downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
+        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
 
         return [
             datasets.SplitGenerator(
@@ -117,8 +118,16 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
             image_path = os.path.join(img_dir, file)
             image_path = image_path.replace("json", "png")
             image, size = load_image(image_path)
+            # print(f'-------------- : {file}')
             for item in data["form"]:
                 words_example, label = item["words"], item["label"]
+
+                # print(words_example)
+                # remap bad 'text:' label with `:`                
+                for w in words_example:
+                    if "text:" in w:
+                        w["text"] = w["text:"]
+
                 words_example = [w for w in words_example if w["text"].strip() != ""]
 
                 if len(words_example) == 0:
