@@ -1,3 +1,4 @@
+
 import json
 import os
 from functools import lru_cache
@@ -24,13 +25,13 @@ _CITATION = """ N/A """
 _DESCRIPTION = """ N/A """
 
 
-def load_image(image_path):
+def load_imageZZZZ(image_path):
     image = Image.open(image_path).convert("RGB")
     w, h = image.size
     return image, (w, h)
 
 
-def load_imageXXX(image_path):
+def load_image(image_path):
     from detectron2.data.detection_utils import read_image
     from detectron2.data.transforms import ResizeTransform, TransformList
 
@@ -98,8 +99,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"                          
         # downloaded_file = "/home/greg/dataset/funsd"
         downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
-        downloaded_file = "/data/dataset/private/corr-indexer-augmented"
-        
+        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
+
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
@@ -110,11 +111,14 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         ]
 
     def _generate_(self, filepath, guid, file):
+        print(f'filepath : {filepath}')
+
         ann_dir = os.path.join(filepath, "annotations")
         img_dir = os.path.join(filepath, "images")
+        font = ImageFont.load_default()
 
         t_start = time.time()
-        # print(f'\n guid = {guid},  {t_start},  {filepath}')
+        print(f'\n guid = {guid} ,  {t_start}')
 
         file_path = os.path.join(ann_dir, file)
         with open(file_path, "r", encoding="utf8",  buffering=1024*1024) as f:
@@ -124,7 +128,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
             # data = ujson.load(f)
         
         t_end = time.time()
-        # print(f't_end = {t_end},  {t_end - t_start}')
+        print(f't_end = {t_end},  {t_end - t_start}')
+        print(len(data))
             
         words = []
         bboxes = []
@@ -134,12 +139,11 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         image_path = os.path.join(img_dir, file)
         image_path = image_path.replace("json", "png")
         image, size = load_image(image_path)
-
-        word_index = 0
-        font = ImageFont.load_default()
+        print(f'-------------- : {file}')
 
         for item in data["form"]:
             words_example, label = item["words"], item["label"]
+
             # print(words_example)
             # remap bad 'text:' label with `:`                
             for w in words_example:
@@ -170,28 +174,24 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     bboxes.append(normalize_bbox(tuple(w["box"]), size))
                     bboxes_raw.append(w["box"])
 
-            words_lower = [w.lower() for w in words]
-            # words_upper = [w.upper() for w in words]
+            # words_lower = [w.lower() for w in words]
+            words_upper = [w.upper() for w in words]
+            # print("payload : ")
             # print ({"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path})
             # draw predictions over the image
-            # print(f"{word_index} => {words_lower}")
 
-        if False:
+            if False:
+                draw = ImageDraw.Draw(image)
+                for tag, box in zip(ner_tags, bboxes_raw):
+                    draw.rectangle(box, outline='red')
+                    draw.text((box[0] + 10, box[1] - 10), text=tag, fill='red', font=font, width=1)
+                image.save(f"/tmp/snippet/{guid}.png")
             
-            draw = ImageDraw.Draw(image)
-
-            for tag, box in zip(ner_tags, bboxes_raw):
-                text = f"{word_index}"
-                draw.rectangle(box, outline='red')
-                draw.text((box[0] + 10, box[1] - 10), text=text, fill='red' )
-                # print(f"\t\t\t {word_index} => {tag} -> {words_lower}")
-                word_index +=1
-            image.save(f"/tmp/snippet/{guid}.png")
-        
         t_end = time.time()
-        # print(f'f_end = {t_end}')
+        print(f'f_end = {t_end}')
         # yield guid, {"id": str(guid), "words": words_upper, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
-        return  guid, {"id": str(guid), "words": words_lower, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}         
+        return  guid, {"id": str(guid), "words": words_upper, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
+        
 
     def _generate_examples(self, filepath):
         logger.info("⏳ Generating examples from = %s", filepath)
@@ -200,26 +200,17 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         font = ImageFont.load_default()
 
         args = []
-        items = sorted(os.listdir(ann_dir))
-        np.random.shuffle(items)
-        stop = 10 #int(len(items) *.1)
-        stop = int(len(items))
-        
-        for guid, file in enumerate(items):
+        for guid, file in enumerate(sorted(os.listdir(ann_dir))):
             file_path = os.path.join(ann_dir, file)
             __args = (filepath, guid, file)
             args.append(__args)
-            if guid == stop:
-                break
 
         results = []
         start = time.time()
         print("\nPool Executor:")
         print("Time elapsed: %s" % (time.time() - start))
 
-        processes = int(mp.cpu_count() * .95)
-        # processes = 1
-        pool = Pool(processes=processes)
+        pool = Pool(processes=int(mp.cpu_count() * .75))
         pool_results = pool.starmap(self._generate_, args)
 
         pool.close()
@@ -231,3 +222,102 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
             yield r
 
         print("Time elapsed[all]: %s" % (time.time() - start))
+
+        return
+
+        if False:
+            futures = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=mp.cpu_count() * .75) as executor:
+                for guid, file in enumerate(sorted(os.listdir(ann_dir))):
+                    file_path = os.path.join(ann_dir, file)
+                    feature = executor.submit(self._generate_, filepath, guid, file)
+                    futures.append(feature)
+
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    res = future.result()
+                    print(res)
+                    
+                except Exception as e:
+                    print(e)
+                print("All tasks has been finished")
+
+
+        for guid, file in enumerate(sorted(os.listdir(ann_dir))):
+            print(f'\n guid = {guid}')
+            file_path = os.path.join(ann_dir, file)
+
+            t_start = time.time()
+
+            print(f't_start = {t_start}')
+            with open(file_path, "r", encoding="utf8",  buffering=1024*1024) as f:
+                _ = f.read() 
+                data = orjson.loads(_)
+                # data = json.load(f)
+                # data = ujson.load(f)
+                
+            
+            t_end = time.time()
+            print(f't_end = {t_end},  {t_end - t_start}')
+            
+            words = []
+            bboxes = []
+            ner_tags = []            
+            bboxes_raw = []
+            
+            image_path = os.path.join(img_dir, file)
+            image_path = image_path.replace("json", "png")
+            image, size = load_image(image_path)
+            print(f'-------------- : {file}')
+
+            for item in data["form"]:
+                words_example, label = item["words"], item["label"]
+
+                # print(words_example)
+                # remap bad 'text:' label with `:`                
+                for w in words_example:
+                    if "text:" in w:
+                        w["text"] = w["text:"]
+
+                words_example = [w for w in words_example if w["text"].strip() != ""]
+
+                if len(words_example) == 0:
+                    continue
+                if label == "other":
+                    for w in words_example:
+                        words.append(w["text"])
+                        ner_tags.append("O")
+                        bboxes.append(normalize_bbox(tuple(w["box"]), size))
+                        bboxes_raw.append(w["box"])
+                else:
+                    # label = _label
+                    words.append(words_example[0]["text"])
+                    ner_tags.append("B-" + label.upper())
+                    bboxes.append(normalize_bbox(tuple(words_example[0]["box"]), size))
+
+                    bboxes_raw.append(words_example[0]["box"])
+
+                    for w in words_example[1:]:
+                        words.append(w["text"])
+                        ner_tags.append("I-" + label.upper())
+                        bboxes.append(normalize_bbox(tuple(w["box"]), size))
+                        bboxes_raw.append(w["box"])
+
+                # words_lower = [w.lower() for w in words]
+                words_upper = [w.upper() for w in words]
+                # print("payload : ")
+                # print ({"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path})
+                # draw predictions over the image
+
+                if False:
+                    draw = ImageDraw.Draw(image)
+                    for tag, box in zip(ner_tags, bboxes_raw):
+                        draw.rectangle(box, outline='red')
+                        draw.text((box[0] + 10, box[1] - 10), text=tag, fill='red', font=font, width=1)
+                    image.save(f"/tmp/snippet/{guid}.png")
+                
+            t_end = time.time()
+            print(f'f_end = {t_end}')
+            # yield guid, {"id": str(guid), "words": words_upper, "bboxes": bboxes, "ner_tags": ner_tags, "image_path": image_path}
+            yield guid, {"id": str(guid), "words": words_upper, "bboxes": bboxes, "ner_tags": ner_tags, "image": image}
+            
