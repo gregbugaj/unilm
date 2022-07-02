@@ -6,12 +6,11 @@ import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
-from PIL import Image, ImageDraw, ImageFont
 
 import numpy as np
 from datasets import ClassLabel, load_dataset, load_metric
-from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 
+import layoutlmft.data.datasets.funsd
 import transformers
 from layoutlmft.data import DataCollatorForKeyValueExtraction
 from layoutlmft.data.data_args import DataTrainingArguments
@@ -25,32 +24,15 @@ from transformers import (
     PreTrainedTokenizerFast,
     TrainingArguments,
     set_seed,
-    LayoutLMv2Config
 )
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
 from transformers.utils import check_min_version
 
-from transformers import LayoutLMv2Processor, LayoutLMv2FeatureExtractor, LayoutLMv2ForTokenClassification, \
-    LayoutLMv2TokenizerFast
-
-
-os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.5.0")
 
 logger = logging.getLogger(__name__)
-
-feature_size = 224  # 224
-batch_size   = 32 #  28
- 
-##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
-# 115003 / 627003
-
-# feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
-feature_extractor = LayoutLMv2FeatureExtractor(size = feature_size, apply_ocr=False)
-tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-base-uncased")
-processor = LayoutLMv2Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
 
 def main():
@@ -104,26 +86,7 @@ def main():
     # Set seed before initializing model.
     set_seed(training_args.seed)
 
-    # datasets = load_dataset(os.path.abspath(layoutlmft.data.datasets.funsd.__file__))
-
-    # datasets = load_dataset(os.path.abspath(layoutlmft.funsd_dataset.__file__))
-    datasets = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/data/cache/")
-
-    print(datasets)
-    labels = datasets['train'].features['ner_tags'].feature.names
-
-    print('NER-Labels -> ')
-    print(labels)
-
-    id2label = {v: k for v, k in enumerate(labels)}
-    label2id = {k: v for v, k in enumerate(labels)}
-
-    print("ID2Label : ")
-    print(id2label)
-    print(label2id) 
-
-    # os.exit()
-
+    datasets = load_dataset(os.path.abspath(layoutlmft.data.datasets.funsd.__file__))
 
     if training_args.do_train:
         column_names = datasets["train"].column_names
@@ -162,7 +125,7 @@ def main():
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-    config = LayoutLMv2Config.from_pretrained(
+    config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
         num_labels=num_labels,
         finetuning_task=data_args.task_name,
@@ -170,21 +133,14 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
-
-
-    # model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
-    # model = LayoutLMv2ForTokenClassification.from_pretrained("./checkpoints", num_labels=len(labels))
-
-    # tokenizer = AutoTokenizer.from_pretrained(
-    #     model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
-    #     cache_dir=model_args.cache_dir,
-    #     use_fast=True,
-    #     revision=model_args.model_revision,
-    #     use_auth_token=True if model_args.use_auth_token else None,
-    # )
-
-    
-    model = LayoutLMv2ForTokenClassification.from_pretrained(
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+        cache_dir=model_args.cache_dir,
+        use_fast=True,
+        revision=model_args.model_revision,
+        use_auth_token=True if model_args.use_auth_token else None,
+    )
+    model = AutoModelForTokenClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
@@ -192,9 +148,6 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
-
-    # print(tokenizer)
-
 
     # Tokenizer check: this script requires a fast tokenizer.
     if not isinstance(tokenizer, PreTrainedTokenizerFast):
@@ -207,7 +160,7 @@ def main():
 
     print('Tokenzier type : ')
     print(type(tokenizer))
-
+    os.exit()
     # Preprocessing the dataset
     # Padding strategy
     padding = "max_length" if data_args.pad_to_max_length else False
@@ -263,46 +216,19 @@ def main():
         tokenized_inputs["image"] = images
         return tokenized_inputs
 
-
-    # we need to define custom features
-    features = Features({
-        'image': Array3D(dtype="int64", shape=(3, feature_size, feature_size)), # 224
-        'input_ids': Sequence(feature=Value(dtype='int64')),
-        'attention_mask': Sequence(Value(dtype='int64')),
-        'token_type_ids': Sequence(Value(dtype='int64')),
-        'bbox': Array2D(dtype="int64", shape=(512, 4)),
-        'labels': Sequence(ClassLabel(names=labels)),
-    })
-
-    def preprocess_data(examples):
-        images = [Image.open(path).convert("RGB") for path in examples['image_path']]
-        # images = [image for image in examples['image']]
-        words = examples['words']
-        boxes = examples['bboxes']
-        word_labels = examples['ner_tags']
-        
-        encoded_inputs = processor(images, words, boxes=boxes, word_labels=word_labels, padding="max_length", truncation=True)
-
-        return encoded_inputs
-
     if training_args.do_train:
         if "train" not in datasets:
             raise ValueError("--do_train requires a train dataset")
         train_dataset = datasets["train"]
         if data_args.max_train_samples is not None:
             train_dataset = train_dataset.select(range(data_args.max_train_samples))
-
-
-        train_dataset = train_dataset.map(preprocess_data, batched=True, remove_columns=train_dataset.column_names,
-                                    features=features, num_proc = 4)
-
-        # train_dataset = train_dataset.map(
-        #     tokenize_and_align_labels,
-        #     batched=True,
-        #     remove_columns=remove_columns,
-        #     num_proc=data_args.preprocessing_num_workers,
-        #     load_from_cache_file=not data_args.overwrite_cache,
-        # )
+        train_dataset = train_dataset.map(
+            tokenize_and_align_labels,
+            batched=True,
+            remove_columns=remove_columns,
+            num_proc=data_args.preprocessing_num_workers,
+            load_from_cache_file=not data_args.overwrite_cache,
+        )
 
     if training_args.do_eval:
         if "validation" not in datasets:
@@ -310,7 +236,6 @@ def main():
         eval_dataset = datasets["validation"]
         if data_args.max_val_samples is not None:
             eval_dataset = eval_dataset.select(range(data_args.max_val_samples))
-            
         eval_dataset = eval_dataset.map(
             tokenize_and_align_labels,
             batched=True,
@@ -325,18 +250,13 @@ def main():
         test_dataset = datasets["test"]
         if data_args.max_test_samples is not None:
             test_dataset = test_dataset.select(range(data_args.max_test_samples))
-
-        
-        test_dataset = datasets['test'].map(preprocess_data, batched=True, remove_columns=datasets['test'].column_names,
-                                      features=features, num_proc = 4)
-
-        # test_dataset = test_dataset.map(
-        #     tokenize_and_align_labels,
-        #     batched=True,
-        #     remove_columns=remove_columns,
-        #     num_proc=data_args.preprocessing_num_workers,
-        #     load_from_cache_file=not data_args.overwrite_cache,
-        # )
+        test_dataset = test_dataset.map(
+            tokenize_and_align_labels,
+            batched=True,
+            remove_columns=remove_columns,
+            num_proc=data_args.preprocessing_num_workers,
+            load_from_cache_file=not data_args.overwrite_cache,
+        )
 
     # Data collator
     data_collator = DataCollatorForKeyValueExtraction(
@@ -390,9 +310,8 @@ def main():
         eval_dataset=eval_dataset if training_args.do_eval else None,
         tokenizer=tokenizer,
         data_collator=data_collator,
-        compute_metrics=compute_metrics,        
+        compute_metrics=compute_metrics,
     )
-
 
     # Training
     if training_args.do_train:

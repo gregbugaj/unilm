@@ -71,10 +71,11 @@ label2id = {k: v for v, k in enumerate(labels)}
 
 print("ID2Label : ")
 print(id2label)
-print(label2id)
+print(label2id) 
 
-feature_size = 224 * 3 # 224
-batch_size   = 4      #  28
+
+feature_size = 224 * 2 # 224
+batch_size   = 8 #  28
  
 ##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 # 115003 / 627003
@@ -154,8 +155,8 @@ os.makedirs(f"./checkpoints", exist_ok = True)
 
 ## Train the model
 
-model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
-# model = LayoutLMv2ForTokenClassification.from_pretrained("./checkpoints", num_labels=len(labels))
+# model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
+model = LayoutLMv2ForTokenClassification.from_pretrained("./checkpoints", num_labels=len(labels))
 
 
 # Set id2label and label2id
@@ -229,9 +230,11 @@ def train():
           # progress_bar.update(1)
       
     sw.add_scalar("Loss", total_loss, epoch)
-    print(f"Saving epoch {epoch}  loss : {loss.item()}")
     #  torch.save(model, f"./tuned/layoutlmv2-finetuned-funsd-torch_epoch_{epoch}.pth")   
-    model.save_pretrained(f"./checkpoints")
+    if train_loss < best_loss:
+      print(f"Saving epoch {epoch}  loss : {loss.item()}")
+      model.save_pretrained(f"./checkpoints")
+
     evaluate(model)
 
   # # torch.save(model.state_dict(), "./tuned/layoutlmv2-finetuned-funsd-torch.pth")
@@ -333,3 +336,7 @@ if __name__ == "__main__":
 
 
 # Generating train split: 604942 examples [14:11, 1582.31 examples/s]Time elapsed[all]: 850.1650393009186
+
+# {'ADDRESS': {'precision': 0.7618739903069467, 'recall': 0.84888, 'f1': 0.8030271497493142, 'number': 25000}, 'ANSWER': {'precision': 0.8337747081629626, 'recall': 0.7568269230769231, 'f1': 0.7934395822622756, 'number': 104000}, 'DOCUMENT_CONTROL': {'precision': 0.6951983298538622, 'recall': 0.5449090909090909, 'f1': 0.610946896340842, 'number': 5500}, 'DOS': {'precision': 0.8662547130289066, 'recall': 0.7693953488372093, 'f1': 0.8149571386343482, 'number': 10750}, 'DOS_ANSWER': {'precision': 0.926337359792925, 'recall': 0.8379512195121951, 'f1': 0.8799303350066592, 'number': 10250}, 'GREETING': {'precision': 0.8458681522748375, 'recall': 0.8574117647058823, 'f1': 0.8516008413180649, 'number': 17000}, 'HEADER': {'precision': 0.6443639394716594, 'recall': 0.6232248062015504, 'f1': 0.6336181078780618, 'number': 32250}, 'LETTER_DATE': {'precision': 0.9152302243211334, 'recall': 0.9492244897959183, 'f1': 0.9319174514125426, 'number': 12250}, 'MEMBER_NAME': {'precision': 0.9892458293120088, 'recall': 0.9566666666666667, 'f1': 0.9726835219955263, 'number': 7500}, 'MEMBER_NAME_ANSWER': {'precision': 0.9183295890048897, 'recall': 0.868625, 'f1': 0.8927860217125971, 'number': 8000}, 'MEMBER_NUMBER': {'precision': 0.9928425357873211, 'recall': 0.971, 'f1': 0.9817997977755308, 'number': 11000}, 'MEMBER_NUMBER_ANSWER': {'precision': 0.9996277338296883, 'recall': 0.9764545454545455, 'f1': 0.9879052655782938, 'number': 11000}, 'PAN': {'precision': 0.6745886654478976, 'recall': 0.984, 'f1': 0.8004338394793927, 'number': 1500}, 'PAN_ANSWER': {'precision': 0.6123218776194468, 'recall': 0.974, 'f1': 0.7519300051466804, 'number': 1500}, 'PARAGRAPH': {'precision': 0.5954225187812048, 'recall': 0.6874343434343434, 'f1': 0.638128695913086, 'number': 74250}, 'PATIENT_NAME': {'precision': 0.8690516368545393, 'recall': 0.8956521739130435, 'f1': 0.8821514217197671, 'number': 5750}, 'PATIENT_NAME_ANSWER': {'precision': 0.9284476784476784, 'recall': 0.8931666666666667, 'f1': 0.9104655113829425, 'number': 6000}, 'PHONE': {'precision': 1.0, 'recall': 0.5813333333333334, 'f1': 0.7352445193929175, 'number': 750}, 'QUESTION': {'precision': 0.9005717653993516, 'recall': 0.9203734939759036, 'f1': 0.9103649635036497, 'number': 83000}, 'URL': {'precision': 0.8691543882126842, 'recall': 0.7752857142857142, 'f1': 0.819540924192087, 'number': 7000}, 'overall_precision': 0.7984122509688524, 'overall_recall': 0.8022567645365573, 'overall_f1': 0.8003298908442655, 'overall_accuracy': 0.9156411921141673}
+# {'ADDRESS': {'precision': 0.7865506205604559, 'recall': 0.80612, 'f1': 0.7962150843506776, 'number': 25000}, 'ANSWER': {'precision': 0.8501443153040574, 'recall': 0.7391923076923077, 'f1': 0.7907955170835327, 'number': 104000}, 'DOCUMENT_CONTROL': {'precision': 0.7127614169867691, 'recall': 0.6072727272727273, 'f1': 0.6558020812880424, 'number': 5500}, 'DOS': {'precision': 0.890881913303438, 'recall': 0.7761860465116279, 'f1': 0.8295883873533506, 'number': 10750}, 'DOS_ANSWER': {'precision': 0.924542600411389, 'recall': 0.833170731707317, 'f1': 0.8764817570688151, 'number': 10250}, 'GREETING': {'precision': 0.7720373446360044, 'recall': 0.7928823529411765, 'f1': 0.7823210191822165, 'number': 17000}, 'HEADER': {'precision': 0.6990067990934542, 'recall': 0.6503255813953488, 'f1': 0.6737880296848394, 'number': 32250}, 'LETTER_DATE': {'precision': 0.930727969348659, 'recall': 0.9915102040816327, 'f1': 0.9601581027667985, 'number': 12250}, 'MEMBER_NAME': {'precision': 0.999723909442297, 'recall': 0.9656, 'f1': 0.9823657080846445, 'number': 7500}, 'MEMBER_NAME_ANSWER': {'precision': 0.9087003222341569, 'recall': 0.846, 'f1': 0.8762299326773693, 'number': 8000}, 'MEMBER_NUMBER': {'precision': 0.9803609838211914, 'recall': 0.953, 'f1': 0.9664868851703314, 'number': 11000}, 'MEMBER_NUMBER_ANSWER': {'precision': 0.9909876428505063, 'recall': 0.9696363636363636, 'f1': 0.9801957450719111, 'number': 11000}, 'PAN': {'precision': 0.6496887379739672, 'recall': 0.7653333333333333, 'f1': 0.7027854300581573, 'number': 1500}, 'PAN_ANSWER': {'precision': 0.7185226636821489, 'recall': 0.856, 'f1': 0.7812595071493763, 'number': 1500}, 'PARAGRAPH': {'precision': 0.6005356480983297, 'recall': 0.6764579124579124, 'f1': 0.6362398424189452, 'number': 74250}, 'PATIENT_NAME': {'precision': 0.8970454957404387, 'recall': 0.8606956521739131, 'f1': 0.8784947190911513, 'number': 5750}, 'PATIENT_NAME_ANSWER': {'precision': 0.9018823921372647, 'recall': 0.9023333333333333, 'f1': 0.902107806381738, 'number': 6000}, 'PHONE': {'precision': 1.0, 'recall': 0.48133333333333334, 'f1': 0.6498649864986499, 'number': 750}, 'QUESTION': {'precision': 0.8901784167677118, 'recall': 0.9287349397590361, 'f1': 0.9090480261800171, 'number': 83000}, 'URL': {'precision': 0.8729788298049675, 'recall': 0.7481428571428571, 'f1': 0.8057542887914455, 'number': 7000}, 'overall_precision': 0.8060397741222686, 'overall_recall': 0.7938169257340242, 'overall_f1': 0.7998816588642731, 'overall_accuracy': 0.9166312911240683}
+# {'ADDRESS': {'precision': 0.7297903054247075, 'recall': 0.76844, 'f1': 0.748616631595355, 'number': 25000}, 'ANSWER': {'precision': 0.8280905196659599, 'recall': 0.7360769230769231, 'f1': 0.779377328907984, 'number': 104000}, 'DOCUMENT_CONTROL': {'precision': 0.6814767117407169, 'recall': 0.5772727272727273, 'f1': 0.6250615218033272, 'number': 5500}, 'DOS': {'precision': 0.8558310376492194, 'recall': 0.7802790697674419, 'f1': 0.8163106418179163, 'number': 10750}, 'DOS_ANSWER': {'precision': 0.9251197213757074, 'recall': 0.8292682926829268, 'f1': 0.874575573618685, 'number': 10250}, 'GREETING': {'precision': 0.7612435691763014, 'recall': 0.8094705882352942, 'f1': 0.7846167004019728, 'number': 17000}, 'HEADER': {'precision': 0.7083931007941784, 'recall': 0.6278449612403101, 'f1': 0.6656913188565418, 'number': 32250}, 'LETTER_DATE': {'precision': 0.9919354838709677, 'recall': 0.9639183673469388, 'f1': 0.977726256520659, 'number': 12250}, 'MEMBER_NAME': {'precision': 0.9968345719790807, 'recall': 0.9657333333333333, 'f1': 0.9810375186238658, 'number': 7500}, 'MEMBER_NAME_ANSWER': {'precision': 0.9155778894472362, 'recall': 0.911, 'f1': 0.9132832080200501, 'number': 8000}, 'MEMBER_NUMBER': {'precision': 0.982533150434385, 'recall': 0.9767272727272728, 'f1': 0.9796216093002053, 'number': 11000}, 'MEMBER_NUMBER_ANSWER': {'precision': 0.989867354458364, 'recall': 0.976909090909091, 'f1': 0.9833455344070279, 'number': 11000}, 'PAN': {'precision': 0.6691331923890064, 'recall': 0.844, 'f1': 0.7464622641509434, 'number': 1500}, 'PAN_ANSWER': {'precision': 0.6144444444444445, 'recall': 0.7373333333333333, 'f1': 0.6703030303030303, 'number': 1500}, 'PARAGRAPH': {'precision': 0.5724906230756311, 'recall': 0.6886464646464646, 'f1': 0.6252193317641304, 'number': 74250}, 'PATIENT_NAME': {'precision': 0.8954307386671483, 'recall': 0.8622608695652174, 'f1': 0.8785328253743245, 'number': 5750}, 'PATIENT_NAME_ANSWER': {'precision': 0.9855734112490869, 'recall': 0.8995, 'f1': 0.9405716277448588, 'number': 6000}, 'PHONE': {'precision': 0.9822134387351779, 'recall': 0.6626666666666666, 'f1': 0.7914012738853503, 'number': 750}, 'QUESTION': {'precision': 0.8929518935036274, 'recall': 0.9164698795180722, 'f1': 0.9045580488268942, 'number': 83000}, 'URL': {'precision': 0.8985313751668892, 'recall': 0.7691428571428571, 'f1': 0.8288177339901478, 'number': 7000}, 'overall_precision': 0.791953442579104, 'overall_recall': 0.7909522164651699, 'overall_f1': 0.7914525128722705, 'overall_accuracy': 0.9114579301561935}

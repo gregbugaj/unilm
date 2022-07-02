@@ -80,7 +80,22 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER', 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER']
+                            names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
+                             'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 
+                             'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 
+                             'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 
+                             'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER',
+                             'B-HEADER', 'I-HEADER',
+                             'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
+                             'B-LETTER_DATE', 'I-LETTER_DATE',
+                             'B-PARAGRAPH', 'I-PARAGRAPH',
+                             'B-ADDRESS', 'I-ADDRESS',
+                             'B-QUESTION', 'I-QUESTION',
+                             'B-ANSWER', 'I-ANSWER',
+                             'B-PHONE', 'I-PHONE',
+                             'B-URL', 'I-URL',
+                             'B-GREETING', 'I-GREETING',
+                             ]
                         )
                     ),
                     "image_path": datasets.Value("string"),
@@ -177,7 +192,6 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
             # print(f"{word_index} => {words_lower}")
 
         if False:
-            
             draw = ImageDraw.Draw(image)
 
             for tag, box in zip(ner_tags, bboxes_raw):
@@ -202,7 +216,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         args = []
         items = sorted(os.listdir(ann_dir))
         np.random.shuffle(items)
-        stop = 10 #int(len(items) *.1)
+        stop = int(len(items) *.1)
         stop = int(len(items))
         
         for guid, file in enumerate(items):
