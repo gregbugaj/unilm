@@ -64,7 +64,7 @@ class FunsdConfig(datasets.BuilderConfig):
         super(FunsdConfig, self).__init__(**kwargs)
 
 class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
-    """FUNSD LIKE dataset foro NER extraction"""
+    """FUNSD LIKE dataset for NER extraction"""
 
     BUILDER_CONFIGS = [
         FunsdConfig(name="funsd_dataset", version=datasets.Version("1.6.0"), description="FUNSD Like dataset"),

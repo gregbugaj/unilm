@@ -56,11 +56,33 @@ class Funsd(datasets.GeneratorBasedBuilder):
                     "id": datasets.Value("string"),
                     "tokens": datasets.Sequence(datasets.Value("string")),
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
-                    "ner_tags": datasets.Sequence(
+                    # "ner_tags": datasets.Sequence(
+                    #     datasets.features.ClassLabel(
+                    #         names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                    #     )
+                    # ),
+
+                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
+                             'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 
+                             'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 
+                             'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 
+                             'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER',
+                             'B-HEADER', 'I-HEADER',
+                             'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
+                             'B-LETTER_DATE', 'I-LETTER_DATE',
+                             'B-PARAGRAPH', 'I-PARAGRAPH',
+                             'B-ADDRESS', 'I-ADDRESS',
+                             'B-QUESTION', 'I-QUESTION',
+                             'B-ANSWER', 'I-ANSWER',
+                             'B-PHONE', 'I-PHONE',
+                             'B-URL', 'I-URL',
+                             'B-GREETING', 'I-GREETING',
+                             ]
                         )
                     ),
+                    
                     "image": datasets.Array3D(shape=(3, 224, 224), dtype="uint8"),
                     "image_path": datasets.Value("string"),
                 }
@@ -72,7 +94,10 @@ class Funsd(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager):
         """Returns SplitGenerators."""
-        downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
+        # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
+
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"   
+
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
