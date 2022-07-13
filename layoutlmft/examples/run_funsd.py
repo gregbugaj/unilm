@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+from gc import callbacks
 import logging
 import os
 import sys
@@ -33,8 +34,10 @@ from transformers.utils import check_min_version
 from transformers import LayoutLMv2Processor, LayoutLMv2FeatureExtractor, LayoutLMv2ForTokenClassification, \
     LayoutLMv2TokenizerFast
 
+import multiprocessing as mp
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
+os.environ['TRANSFORMERS_CACHE'] = '/data/cache/'
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.5.0")
@@ -49,10 +52,64 @@ batch_size   = 32 #  28
 
 # feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
 feature_extractor = LayoutLMv2FeatureExtractor(size = feature_size, apply_ocr=False)
-tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-base-uncased")
+tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-large-uncased")# microsoft/layoutlmv2-base-uncased
 processor = LayoutLMv2Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
+from transformers import TrainerCallback
 
+class ModelTrackingCallback(TrainerCallback):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.best_metric = 1000
+
+    def on_train_begin(self, args, state, control, **kwargs):
+        print(f"Starting training : {state.is_local_process_zero}")
+
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        _ = logs.pop("total_flos", None)
+
+        if state.is_local_process_zero:
+            print(logs)
+
+    def on_save(self, args, state, control, **kwargs):
+        print(f"model saved ---- : {state.best_metric}, {self.best_metric },  {state.is_local_process_zero}")
+        
+        print(state)
+        if state.is_local_process_zero:
+            import os
+            from pathlib import Path
+            import shutil, errno
+
+            def copy_and_overwrite(from_path, to_path):
+                if os.path.exists(to_path):
+                    shutil.rmtree(to_path)
+                shutil.copytree(from_path, to_path)
+                
+            best_dir = os.path.join(args.output_dir, "best")
+
+            if state.best_metric < self.best_metric:
+                self.best_metric = state.best_metric
+                print(f"Saving best [{self.best_metric }]: {state.best_model_checkpoint}")
+                os.makedirs(best_dir, exist_ok=True)
+                try:
+                    copy_and_overwrite(state.best_model_checkpoint, best_dir)                
+                except Exception as ex:
+                    print(ex)
+                
+
+    # TrainerState(epoch=0.11160714285714286, global_step=50, max_steps=22400, num_train_epochs=50, total_flos=967199925731328.0, 
+    # log_history=[{'loss': 1.4162, 'learning_rate': 4.991960696739616e-05, 'epoch': 0.11, 'step': 50},
+    #  {'eval_loss': 0.34052422642707825, 'eval_precision': 0.675246152877207, 'eval_recall': 0.7972832283972039, 'eval_f1': 0.7312077294685991, 'eval_accuracy': 0.9114714962790795, 
+    #  'eval_runtime': 29.2985, 'eval_samples_per_second': 40.787, 'eval_steps_per_second': 10.205, 'epoch': 0.11, 'step': 50}], 
+    #  best_metric=0.34052422642707825, best_model_checkpoint='/home/gbugaj/dev/unilm/layoutlmft/examples/checkpoints-tuned-pan/checkpoint-50', 
+    #  is_local_process_zero=False, is_world_process_zero=False, is_hyper_param_search=False, trial_name=None, trial_params=None)
+
+
+
+
+            
 def main():
     # See all possible arguments in layoutlmft/transformers/training_args.py
     # or by passing the --help flag to this script.
@@ -169,6 +226,9 @@ def main():
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
+
+        hidden_dropout_prob = .5,
+        attention_probs_dropout_prob = .5,
     )
 
 
@@ -292,9 +352,9 @@ def main():
         if data_args.max_train_samples is not None:
             train_dataset = train_dataset.select(range(data_args.max_train_samples))
 
-
+        processes = 4 # int(mp.cpu_count() // 4)
         train_dataset = train_dataset.map(preprocess_data, batched=True, remove_columns=train_dataset.column_names,
-                                    features=features, num_proc = 4)
+                                    features=features, num_proc = processes)
 
         # train_dataset = train_dataset.map(
         #     tokenize_and_align_labels,
@@ -311,13 +371,17 @@ def main():
         if data_args.max_val_samples is not None:
             eval_dataset = eval_dataset.select(range(data_args.max_val_samples))
             
-        eval_dataset = eval_dataset.map(
-            tokenize_and_align_labels,
-            batched=True,
-            remove_columns=remove_columns,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
-        )
+        processes = 4 # int(mp.cpu_count() // 4)
+        eval_dataset = eval_dataset.map(preprocess_data, batched=True, remove_columns=eval_dataset.column_names,
+                                    features=features, num_proc = processes)
+
+        # eval_dataset = eval_dataset.map(
+        #     tokenize_and_align_labels,
+        #     batched=True,
+        #     remove_columns=remove_columns,
+        #     num_proc=data_args.preprocessing_num_workers,
+        #     load_from_cache_file=not data_args.overwrite_cache,
+        # )
 
     if training_args.do_predict:
         if "test" not in datasets:
@@ -326,9 +390,9 @@ def main():
         if data_args.max_test_samples is not None:
             test_dataset = test_dataset.select(range(data_args.max_test_samples))
 
-        
+        processes = 4 # int(mp.cpu_count() // 4)
         test_dataset = datasets['test'].map(preprocess_data, batched=True, remove_columns=datasets['test'].column_names,
-                                      features=features, num_proc = 4)
+                                      features=features, num_proc = processes)
 
         # test_dataset = test_dataset.map(
         #     tokenize_and_align_labels,
@@ -390,7 +454,8 @@ def main():
         eval_dataset=eval_dataset if training_args.do_eval else None,
         tokenizer=tokenizer,
         data_collator=data_collator,
-        compute_metrics=compute_metrics,        
+        compute_metrics=compute_metrics,
+        callbacks = [ModelTrackingCallback]
     )
 
 
@@ -449,7 +514,6 @@ def main():
 def _mp_fn(index):
     # For xla_spawn (TPUs)
     main()
-
 
 if __name__ == "__main__":
     main()

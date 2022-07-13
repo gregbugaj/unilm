@@ -17,3 +17,23 @@ CUDA_VISIBLE_DEVICES=2 PYTHONPATH="$PWD" python -m torch.distributed.launch --np
 
 Add DeepSpeed support 
 https://huggingface.co/docs/transformers/main_classes/deepspeed
+
+
+
+
+
+
+DatasetDict({
+    train: Dataset({
+        features: ['id', 'words', 'bboxes', 'ner_tags', 'image_path'],
+        num_rows: 6440
+    })
+    test: Dataset({
+        features: ['id', 'words', 'bboxes', 'ner_tags', 'image_path'],
+        num_rows: 3240
+    })
+    validation: Dataset({
+        features: ['id', 'words', 'bboxes', 'ner_tags', 'image_path'],
+        num_rows: 2270
+    })
+})

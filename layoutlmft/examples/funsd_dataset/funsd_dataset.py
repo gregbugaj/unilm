@@ -54,20 +54,20 @@ def normalize_bbox(bbox, size):
     return res
 
 class FunsdConfig(datasets.BuilderConfig):
-    """BuilderConfig for FUNSD"""
+    """BuilderConfig for FUNSDLike"""
 
     def __init__(self, **kwargs):
-        """BuilderConfig for FUNSD.
+        """BuilderConfig for FUNSDLike.
         Args:
           **kwargs: keyword arguments forwarded to super.
         """
         super(FunsdConfig, self).__init__(**kwargs)
 
 class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
-    """FUNSD LIKE dataset."""
+    """FUNSD LIKE dataset foro NER extraction"""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd_dataset", version=datasets.Version("1.1.0"), description="FUNSD Like dataset"),
+        FunsdConfig(name="funsd_dataset", version=datasets.Version("1.6.0"), description="FUNSD Like dataset"),
     ]
 
     def _info(self):
@@ -121,6 +121,9 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
+            ),
+            datasets.SplitGenerator(
+                name=datasets.Split.VALIDATION, gen_kwargs={"filepath": f"{downloaded_file}/dataset/validation_data/"}
             ),
         ]
 
