@@ -14,10 +14,18 @@ logger = datasets.logging.get_logger(__name__)
 
 
 _CITATION = """\
-
+@article{Jaume2019FUNSDAD,
+  title={FUNSD: A Dataset for Form Understanding in Noisy Scanned Documents},
+  author={Guillaume Jaume and H. K. Ekenel and J. Thiran},
+  journal={2019 International Conference on Document Analysis and Recognition Workshops (ICDARW)},
+  year={2019},
+  volume={2},
+  pages={1-6}
+}
 """
 
 _DESCRIPTION = """\
+https://guillaumejaume.github.io/FUNSD/
 """
 
 
@@ -34,10 +42,10 @@ class FunsdConfig(datasets.BuilderConfig):
 
 
 class Funsd(datasets.GeneratorBasedBuilder):
-    """dataset."""
+    """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.8.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.0.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -80,7 +88,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=None,
-            homepage="",
+            homepage="https://guillaumejaume.github.io/FUNSD/",
             citation=_CITATION,
         )
 
