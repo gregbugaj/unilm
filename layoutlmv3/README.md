@@ -11,11 +11,24 @@ conda activate layoutlmv3
 git clone https://github.com/microsoft/unilm.git
 cd unilm/layoutlmv3
 pip install -r requirements.txt
+
+
 # install pytorch, torchvision refer to https://pytorch.org/get-started/locally/
 pip install torch==1.10.0+cu111 torchvision==0.11.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 # install detectron2 refer to https://detectron2.readthedocs.io/en/latest/tutorials/install.html
 python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html
 pip install -e .
+```
+
+PIP install failed installing torch 
+
+```
+conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch -c conda-forge
+```
+
+
+```
+python -c "import torch; print(torch.__version__)"
 ```
 
 ## Pre-trained Models
@@ -33,7 +46,7 @@ We provide some fine-tuned models and their train/test logs.
   python -m torch.distributed.launch \
     --nproc_per_node=8 --master_port 4398 examples/run_funsd_cord.py \
     --dataset_name funsd \
-    --do_train --do_eval \
+    --do_train --ls / \
     --model_name_or_path microsoft/layoutlmv3-base \
     --output_dir /path/to/layoutlmv3-base-finetuned-funsd \
     --segment_level_layout 1 --visual_embed 1 --input_size 224 \

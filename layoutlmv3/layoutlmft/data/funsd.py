@@ -37,7 +37,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.8.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.9.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -89,6 +89,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"   
+        downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+
 
         return [
             datasets.SplitGenerator(

@@ -17,24 +17,14 @@ export MAX_JOBS=8
 #     --label_all_tokens true \
   
 
-# tensorboard --logdir=/data/models/layoutlmv3-base-finetuned --bind_all
-
 PYTHONPATH="$PWD" python -m torch.distributed.launch \
-    --nproc_per_node=2 --master_port 4398 examples/run_funsd.py \
+    --nproc_per_node=1 --master_port 4500 examples/run_funsd.py \
     --dataset_name funsd \
-    --do_train \
     --do_eval \
-    --do_predict \
-    --model_name_or_path microsoft/layoutlmv3-base \
-    --output_dir /data/models/layoutlmv3-base-finetuned \
+    --model_name_or_path /data/models/layoutlmv3-base-finetuned/checkpoint-4000 \
+    --output_dir /data/models/layoutlmv3-base-finetuned-eval \
     --segment_level_layout 1 --visual_embed 1 --input_size 224 \
-    --max_steps 10000 \
-    --save_steps 500 \
-    --evaluation_strategy steps \
-    --eval_steps 500 \
-    --learning_rate 1e-5 \
     --per_device_train_batch_size 4 \
     --gradient_accumulation_steps 1 \
-    --return_entity_level_metrics true \
     --dataloader_num_workers 8 \
     --fp16

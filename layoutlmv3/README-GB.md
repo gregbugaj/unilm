@@ -65,3 +65,39 @@ LARGE
   eval_samples                        =         60
   eval_samples_per_second             =     21.046
   eval_steps_per_second               =      2.806
+
+
+
+8  conda activate layoutlmv3
+ 1969  pip install torch==1.10.0+cu111 torchvision==0.11.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+ 1970  pip uninstall torch
+ 1971  pip uninstall torchvision
+ 1972  clear
+ 1973  pip install -r requirements.txt
+ 1974  python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html
+ 1975  python -c "import torch; print(torch.__version__)"
+ 1976  python -c "import torch; print(torch.__version__)"pip install torch==1.10.0+cu111 torchvision==0.11.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+ 1977  pip install torch==1.10.0+cu111 torchvision==0.11.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+ 1978  python -c "import torch; print(torch.__version__)"
+ 1979  conda install pytorch torchvision -c pytorch
+ 1980  python -c "import torch; print(torch.__version__)"
+ 1981  python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html
+ 1982  pip install -e .
+ 1983  python -m pip install --upgrade pip
+ 1984  pip install -e .python -m pip install --upgrade pip
+ 1985  python -m pip install --upgrade pip
+ 1986  pip install -e .
+ 1987  ls
+ 1988  cat train.sh 
+ 1989  ls
+ 1990  cat train.sh 
+ 1991  ./train.sh 
+ 1992  pip install datasets
+ 1993  ./train.sh 
+ 1994  conda deactivate
+ 1995  rm -rf ~/anaconda3/
+ 1996  ls /tmp/Anaconda3-2022.05-Linux-x86_64.sh 
+ 1997  /tmp/Anaconda3-2022.05-Linux-x86_64.sh 
+ 1998  conda create --name layoutlmv3 python=3.7
+ 1999  conda activate layoutlmv3
+ 2000  pip install -r requirements.txt
