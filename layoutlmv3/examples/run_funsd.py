@@ -521,6 +521,6 @@ def _mp_fn(index):
 
 if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
-    os.environ['TRANSFORMERS_CACHE'] = '/data/cache/'
+    os.environ['TRANSFORMERS_CACHE'] = '/tmp/cache/'
 
     main()

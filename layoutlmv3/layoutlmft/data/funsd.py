@@ -37,7 +37,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.8.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.2.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -56,11 +56,18 @@ class Funsd(datasets.GeneratorBasedBuilder):
 
                      "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
+                            names = [
+                             "O", 
+                             'B-MEMBER_NAME', 'I-MEMBER_NAME', 
+                             'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
                              'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 
                              'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 
-                             'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 
-                             'B-PATIENT_NAME', 'I-PATIENT_NAME', 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER',
+                             'B-PAN', 'I-PAN', 
+                             'B-PAN_ANSWER', 'I-PAN_ANSWER', 
+                             'B-DOS', 'I-DOS', 
+                             'B-DOS_ANSWER', 'I-DOS_ANSWER', 
+                             'B-PATIENT_NAME', 'I-PATIENT_NAME', 
+                             'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER',
                              'B-HEADER', 'I-HEADER',
                              'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
                              'B-LETTER_DATE', 'I-LETTER_DATE',
@@ -88,7 +95,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
-        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"   
+        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"   
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"   
 
         return [
             datasets.SplitGenerator(
@@ -125,9 +133,24 @@ class Funsd(datasets.GeneratorBasedBuilder):
             image_path = image_path.replace("json", "png")
             image, size = load_image(image_path)
             for item in data["form"]:
+                
+
                 cur_line_bboxes = []
                 words, label = item["words"], item["label"]
+
+                # remap bad 'text:' label with `:`                
+                for w in words:
+                    if "text:" in w:
+                        w["text"] = w["text:"]
+
+                for w in words :
+                    if "text" not in w:
+                        print(w)
+                        raise Exception("EX")
+
                 words = [w for w in words if w["text"].strip() != ""]
+
+
                 if len(words) == 0:
                     continue
                 if label == "other":
