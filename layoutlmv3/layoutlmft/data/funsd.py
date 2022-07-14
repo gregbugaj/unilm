@@ -14,18 +14,10 @@ logger = datasets.logging.get_logger(__name__)
 
 
 _CITATION = """\
-@article{Jaume2019FUNSDAD,
-  title={FUNSD: A Dataset for Form Understanding in Noisy Scanned Documents},
-  author={Guillaume Jaume and H. K. Ekenel and J. Thiran},
-  journal={2019 International Conference on Document Analysis and Recognition Workshops (ICDARW)},
-  year={2019},
-  volume={2},
-  pages={1-6}
-}
+
 """
 
 _DESCRIPTION = """\
-https://guillaumejaume.github.io/FUNSD/
 """
 
 
@@ -42,10 +34,10 @@ class FunsdConfig(datasets.BuilderConfig):
 
 
 class Funsd(datasets.GeneratorBasedBuilder):
-    """Conll2003 dataset."""
+    """dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.0.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.2.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -56,23 +48,56 @@ class Funsd(datasets.GeneratorBasedBuilder):
                     "id": datasets.Value("string"),
                     "tokens": datasets.Sequence(datasets.Value("string")),
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
-                    "ner_tags": datasets.Sequence(
+                    # "ner_tags": datasets.Sequence(
+                    #     datasets.features.ClassLabel(
+                    #         names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                    #     )
+                    # ),
+
+                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names=["O", "B-HEADER", "I-HEADER", "B-QUESTION", "I-QUESTION", "B-ANSWER", "I-ANSWER"]
+                            names = [
+                             "O", 
+                             'B-MEMBER_NAME', 'I-MEMBER_NAME', 
+                             'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
+                             'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 
+                             'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 
+                             'B-PAN', 'I-PAN', 
+                             'B-PAN_ANSWER', 'I-PAN_ANSWER', 
+                             'B-DOS', 'I-DOS', 
+                             'B-DOS_ANSWER', 'I-DOS_ANSWER', 
+                             'B-PATIENT_NAME', 'I-PATIENT_NAME', 
+                             'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER',
+                             'B-HEADER', 'I-HEADER',
+                             'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
+                             'B-LETTER_DATE', 'I-LETTER_DATE',
+                             'B-PARAGRAPH', 'I-PARAGRAPH',
+                             'B-ADDRESS', 'I-ADDRESS',
+                             'B-QUESTION', 'I-QUESTION',
+                             'B-ANSWER', 'I-ANSWER',
+                             'B-PHONE', 'I-PHONE',
+                             'B-URL', 'I-URL',
+                             'B-GREETING', 'I-GREETING',
+                             ]
                         )
                     ),
+                    
                     "image": datasets.Array3D(shape=(3, 224, 224), dtype="uint8"),
                     "image_path": datasets.Value("string"),
                 }
             ),
             supervised_keys=None,
-            homepage="https://guillaumejaume.github.io/FUNSD/",
+            homepage="",
             citation=_CITATION,
         )
 
     def _split_generators(self, dl_manager):
         """Returns SplitGenerators."""
-        downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
+        # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
+
+        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"   
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"   
+
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
@@ -108,9 +133,24 @@ class Funsd(datasets.GeneratorBasedBuilder):
             image_path = image_path.replace("json", "png")
             image, size = load_image(image_path)
             for item in data["form"]:
+                
+
                 cur_line_bboxes = []
                 words, label = item["words"], item["label"]
+
+                # remap bad 'text:' label with `:`                
+                for w in words:
+                    if "text:" in w:
+                        w["text"] = w["text:"]
+
+                for w in words :
+                    if "text" not in w:
+                        print(w)
+                        raise Exception("EX")
+
                 words = [w for w in words if w["text"].strip() != ""]
+
+
                 if len(words) == 0:
                     continue
                 if label == "other":
