@@ -1,7 +1,5 @@
 import os
 
-
-# from funsd_dataset.funsd_dataset import FunsdLikeDataset 
 import numpy as np
 import torch
 from torch.nn import DataParallel
