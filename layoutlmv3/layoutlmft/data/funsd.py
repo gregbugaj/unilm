@@ -37,7 +37,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.9.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.10.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -136,7 +136,6 @@ class Funsd(datasets.GeneratorBasedBuilder):
             image, size = load_image(image_path)
             for item in data["form"]:
                 
-
                 cur_line_bboxes = []
                 words, label = item["words"], item["label"]
 
@@ -151,7 +150,6 @@ class Funsd(datasets.GeneratorBasedBuilder):
                         raise Exception("EX")
 
                 words = [w for w in words if w["text"].strip() != ""]
-
 
                 if len(words) == 0:
                     continue

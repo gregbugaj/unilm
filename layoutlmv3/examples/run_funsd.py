@@ -8,6 +8,7 @@ from typing import Optional
 
 import numpy as np
 from datasets import ClassLabel, load_dataset, load_metric
+from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 
 import transformers
 
@@ -22,6 +23,16 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
+
+from transformers import (
+    LayoutLMv3Processor,
+    LayoutLMv3FeatureExtractor,
+    LayoutLMv3ForTokenClassification,
+    LayoutLMv3TokenizerFast,
+)
+
+from PIL import Image
+
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
 from transformers.utils import check_min_version
 
@@ -35,6 +46,18 @@ from timm.data.constants import \
     IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_INCEPTION_MEAN, IMAGENET_INCEPTION_STD
 from torchvision import transforms
 import torch
+
+
+# we need to define custom features for `set_format` (used later on) to work properly
+featuresXXX = Features({
+    'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
+    'input_ids': Sequence(feature=Value(dtype='int64')),
+    'attention_mask': Sequence(Value(dtype='int64')),
+    'bbox': Array2D(dtype="int64", shape=(512, 4)),
+    'labels': Sequence(feature=Value(dtype='int64')),
+})
+
+
 
 @dataclass
 class ModelArguments:
@@ -219,6 +242,8 @@ def main():
         column_names = datasets["test"].column_names
         features = datasets["test"].features
 
+
+    print(features)
     text_column_name = "words" if "words" in column_names else "tokens"
 
     label_column_name = (
@@ -260,6 +285,8 @@ def main():
         input_size=data_args.input_size,
         use_auth_token=True if model_args.use_auth_token else None,
     )
+
+    # AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         tokenizer_file=None,  # avoid loading from a cached file of the pre-trained model in another machine
@@ -269,7 +296,7 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
-    model = AutoModelForTokenClassification.from_pretrained(
+    model = LayoutLMv3ForTokenClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
@@ -278,6 +305,16 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
+    # feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
+    feature_extractor = LayoutLMv3FeatureExtractor(size=40, apply_ocr=False)
+    # tokenizer = LayoutLMv2TokenizerFast.from_pretrained(
+    #     "microsoft/layoutlmv2-large-uncased")  # microsoft/layoutlmv2-base-uncased
+    processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
+
+    print(config)
+    print(tokenizer)
+    print(model)
+    
     # Tokenizer check: this script requires a fast tokenizer.
     if not isinstance(tokenizer, PreTrainedTokenizerFast):
         raise ValueError(
@@ -310,18 +347,20 @@ def main():
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples, augmentation=False):
+        print("TEST")
         tokenized_inputs = tokenizer(
             examples[text_column_name],
             padding=False,
             truncation=True,
             return_overflowing_tokens=True,
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
-            is_split_into_words=True,
+            is_split_into_words=False,
         )
 
         labels = []
         bboxes = []
         images = []
+
         for batch_index in range(len(tokenized_inputs["input_ids"])):
             word_ids = tokenized_inputs.word_ids(batch_index=batch_index)
             org_batch_index = tokenized_inputs["overflow_to_sample_mapping"][batch_index]
@@ -370,13 +409,42 @@ def main():
         train_dataset = datasets["train"]
         if data_args.max_train_samples is not None:
             train_dataset = train_dataset.select(range(data_args.max_train_samples))
+
+        image_column_name = "image"
+        text_column_name = "tokens"
+        boxes_column_name = "bboxes"
+        label_column_name = "ner_tags"
+
+        def prepare_examples(examples):
+            # images = examples[image_column_name]
+            images = [Image.open(path).convert("RGB") for path in examples['image_path']]
+            words = examples[text_column_name]
+            boxes = examples[boxes_column_name]
+            word_labels = examples[label_column_name]
+
+            encoding = processor(images, words, boxes=boxes, word_labels=word_labels,
+                                truncation=True, padding="max_length")
+
+            return encoding
+
+
+        train_dataset = train_dataset.map(prepare_examples, batched=True, remove_columns=train_dataset.column_names,
+                                          features=features, num_proc=data_args.preprocessing_num_workers)
+
         train_dataset = train_dataset.map(
-            tokenize_and_align_labels,
+            prepare_examples,
             batched=True,
-            remove_columns=remove_columns,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
+            remove_columns=train_dataset.column_names,
+            features=features,
         )
+    #
+    # train_dataset = train_dataset.map(
+    #     tokenize_and_align_labels,
+    #     batched=True,
+    #     remove_columns=remove_columns,
+    #     num_proc=data_args.preprocessing_num_workers,
+    #     load_from_cache_file=not data_args.overwrite_cache,
+    # )
 
     if training_args.do_eval:
         validation_name = "test"
@@ -522,5 +590,5 @@ def _mp_fn(index):
 if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
     os.environ['TRANSFORMERS_CACHE'] = '/tmp/cache/'
-
+    print(transformers.__version__)
     main()
