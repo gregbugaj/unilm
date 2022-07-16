@@ -1,5 +1,6 @@
 import os
 import random
+from unittest.util import _MAX_LENGTH
 
 import numpy as np
 import torch
@@ -32,6 +33,12 @@ warnings.filterwarnings('ignore')
 
 # this dataset uses the new Image feature :)
 from transformers import AutoProcessor
+from transformers import AutoModelForTokenClassification
+from transformers import LayoutLMv3ForTokenClassification
+
+from transformers import TrainingArguments, Trainer
+from transformers.data.data_collator import default_data_collator
+
 
 use_cuda = torch.cuda.is_available()
 device = torch.device('cuda:0' if use_cuda else 'cpu')
@@ -45,7 +52,7 @@ print(transformers.__version__)
 
 # cache_dir, data_dir
 # dataset = load_dataset("nielsr/funsd")
-dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/home/greg/cache/")
+dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/home/gbugaj/cache/")
 
 # print(dataset['train'].features)
 print(dataset['train'].features['bboxes'])
@@ -62,14 +69,15 @@ print("ID2Label : ")
 print(id2label)
 print(label2id)
 
-example = dataset["train"][0]
-# example["image"].show()
+if False:
+    example = dataset["train"][0]
+    # example["image"].show()
 
 
-words, boxes, ner_tags = example["tokens"], example["bboxes"], example["ner_tags"]
-print(words)
-print(boxes)
-print(ner_tags)
+    words, boxes, ner_tags = example["tokens"], example["bboxes"], example["ner_tags"]
+    print(words)
+    print(boxes)
+    print(ner_tags)
 
 # we'll use the Auto API here - it will load LayoutLMv3Processor behind the scenes,
 # based on the checkpoint we provide from the hub
@@ -109,14 +117,17 @@ num_labels = len(label_list)
 print(label_list)
 print(id2label)
 
+max_len_custom = 512
+
 def prepare_examples(examples):
   images = examples[image_column_name]
   words = examples[text_column_name]
   boxes = examples[boxes_column_name]
   word_labels = examples[label_column_name]
 
+    
   encoding = processor(images, words, boxes=boxes, word_labels=word_labels,
-                       truncation=True, padding="max_length")
+                       truncation=True, max_length= max_len_custom, padding="max_length")
 
   return encoding
 
@@ -125,7 +136,7 @@ features = Features({
     'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
     'input_ids': Sequence(feature=Value(dtype='int64')),
     'attention_mask': Sequence(Value(dtype='int64')),
-    'bbox': Array2D(dtype="int64", shape=(512, 4)),
+    'bbox': Array2D(dtype="int64", shape=(max_len_custom, 4)),
     'labels': Sequence(feature=Value(dtype='int64')),
 })
 
@@ -197,18 +208,21 @@ def compute_metrics(p):
 
 # Define the model
 
-from transformers import LayoutLMv3ForTokenClassification
 
 model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-base",
                                                          id2label=id2label,
                                                          label2id=label2id)
 
 
-from transformers import TrainingArguments, Trainer
-from transformers.data.data_collator import default_data_collator
+
+# Accessing the model configuration
+configuration = model.config
+print(configuration)
+configuration.max_position_embeddings = max_len_custom
+
 
 training_args = TrainingArguments(
-                                  max_steps=45000,
+                                  max_steps=5000,
                                   save_steps = 500,
                                   per_device_train_batch_size=8,
                                   per_device_eval_batch_size=2,
@@ -217,8 +231,8 @@ training_args = TrainingArguments(
                                   eval_steps=500,
                                   load_best_model_at_end=True,
                                   metric_for_best_model="f1",
-                                  output_dir="/home/greg/tmp/models/layoutlmv3-base-finetuned-funsd",
-                                  resume_from_checkpoint="/home/greg/tmp/models/layoutlmv3-base-finetuned-funsd/checkpoint-2000",
+                                  output_dir="/home/gbugaj/tmp/models/layoutlmv3-base-finetuned-funsd",
+                                  resume_from_checkpoint="/home/gbugaj/tmp/models/layoutlmv3-base-finetuned-funsd/checkpoint-2000",
                                   fp16=True
                                 )
 
@@ -256,8 +270,23 @@ if False:
 # Token indices sequence length is longer than the specified maximum sequence length for this model (541 > 512). Running this sequence through the model will result in indexing errors
 
 # Inference
-from transformers import AutoModelForTokenClassification
-model = AutoModelForTokenClassification.from_pretrained("/home/greg/tmp/models/layoutlmv3-base-finetuned-funsd/checkpoint-28000")
+model_name_or_path = "/home/gbugaj/tmp/models/layoutlmv3-base-finetuned-funsd/checkpoint-5000"
+model = AutoModelForTokenClassification.from_pretrained(model_name_or_path, ignore_mismatched_sizes=True)
+
+# # AutoTokenizer
+# tokenizer = AutoTokenizer.from_pretrained(
+#     model_name_or_path,
+#     use_fast=True,
+#     add_prefix_space=True,
+# )
+# model = LayoutLMv3ForTokenClassification.from_pretrained(
+#     model_name_or_path,
+# )
+
+# # feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
+# feature_extractor = LayoutLMv3FeatureExtractor(size=40, apply_ocr=False)
+# processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
+
 
 # example = dataset["test"][random.randint(0, len(dataset["test"]))]
 index = random.randrange(0, len(dataset["test"]), 1)
@@ -265,7 +294,7 @@ print(index)
 
 # Token indices sequence length is longer than the specified maximum sequence length for this model (585 > 512). Running this sequence through the model will result in indexing errors
 # 129
-example = dataset["test"][170]
+example = dataset["test"][133]
 print(example.keys())
 
 image = example["image"]
@@ -273,7 +302,9 @@ words = example["tokens"]
 boxes = example["bboxes"]
 word_labels = example["ner_tags"]
 
-encoding = processor(image, words, boxes=boxes, word_labels=word_labels, return_tensors="pt")
+
+
+encoding = processor(image, words, boxes=boxes, word_labels=word_labels, truncation=True, padding="max_length", return_tensors="pt")
 for k,v in encoding.items():
   print(k,v.shape)
 
