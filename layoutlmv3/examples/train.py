@@ -1,6 +1,5 @@
 import os
 import random
-from unittest.util import _MAX_LENGTH
 
 import numpy as np
 import torch
@@ -52,7 +51,7 @@ print(transformers.__version__)
 
 # cache_dir, data_dir
 # dataset = load_dataset("nielsr/funsd")
-dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/home/gbugaj/cache/")
+dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/mnt/data/cache")
 
 # print(dataset['train'].features)
 print(dataset['train'].features['bboxes'])
@@ -72,8 +71,6 @@ print(label2id)
 if False:
     example = dataset["train"][0]
     # example["image"].show()
-
-
     words, boxes, ner_tags = example["tokens"], example["bboxes"], example["ner_tags"]
     print(words)
     print(boxes)
@@ -81,9 +78,13 @@ if False:
 
 # we'll use the Auto API here - it will load LayoutLMv3Processor behind the scenes,
 # based on the checkpoint we provide from the hub
-processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
+# processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
+# processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
 
-
+# Max model size is 512, so we will need to handle any documents larger thjan ath
+feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False)
+tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base")
+processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
 features = dataset["train"].features
 column_names = dataset["train"].column_names
@@ -117,18 +118,13 @@ num_labels = len(label_list)
 print(label_list)
 print(id2label)
 
-max_len_custom = 512
-
 def prepare_examples(examples):
   images = examples[image_column_name]
   words = examples[text_column_name]
   boxes = examples[boxes_column_name]
   word_labels = examples[label_column_name]
 
-    
-  encoding = processor(images, words, boxes=boxes, word_labels=word_labels,
-                       truncation=True, max_length= max_len_custom, padding="max_length")
-
+  encoding = processor(images, words, boxes=boxes, word_labels=word_labels,truncation=True,  padding="max_length")
   return encoding
 
 # we need to define custom features for `set_format` (used later on) to work properly
@@ -136,15 +132,20 @@ features = Features({
     'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
     'input_ids': Sequence(feature=Value(dtype='int64')),
     'attention_mask': Sequence(Value(dtype='int64')),
-    'bbox': Array2D(dtype="int64", shape=(max_len_custom, 4)),
+    'bbox': Array2D(dtype="int64", shape=(512, 4)),
     'labels': Sequence(feature=Value(dtype='int64')),
 })
+
+# We
+dataset['train'] = dataset['train'].shuffle(seed=42)
+dataset['test'] = dataset['test'].shuffle(seed=42)
 
 train_dataset = dataset["train"].map(
     prepare_examples,
     batched=True,
     remove_columns=column_names,
     features=features,
+    num_proc = 8
 )
 
 eval_dataset = dataset["test"].map(
@@ -152,7 +153,13 @@ eval_dataset = dataset["test"].map(
     batched=True,
     remove_columns=column_names,
     features=features,
+    num_proc = 8
 )
+
+
+# dataset['train'] = dataset['train'][:10]
+# dataset['test']  = dataset['test'][:10]
+
 
 example = train_dataset[0]
 processor.tokenizer.decode(example["input_ids"])
@@ -213,26 +220,18 @@ model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-b
                                                          id2label=id2label,
                                                          label2id=label2id)
 
-
-
-# Accessing the model configuration
-configuration = model.config
-print(configuration)
-configuration.max_position_embeddings = max_len_custom
-
-
 training_args = TrainingArguments(
-                                  max_steps=5000,
-                                  save_steps = 500,
+                                  max_steps=50000,
+                                  save_steps = 2000,
                                   per_device_train_batch_size=8,
                                   per_device_eval_batch_size=2,
                                   learning_rate=1e-5,
                                   evaluation_strategy="steps",
-                                  eval_steps=500,
+                                  eval_steps=2000,
                                   load_best_model_at_end=True,
                                   metric_for_best_model="f1",
-                                  output_dir="/home/gbugaj/tmp/models/layoutlmv3-base-finetuned-funsd",
-                                  resume_from_checkpoint="/home/gbugaj/tmp/models/layoutlmv3-base-finetuned-funsd/checkpoint-2000",
+                                  output_dir="/mnt/data/models/layoutlmv3-base-finetuned-funsd",
+                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000",
                                   fp16=True
                                 )
 
@@ -270,8 +269,9 @@ if False:
 # Token indices sequence length is longer than the specified maximum sequence length for this model (541 > 512). Running this sequence through the model will result in indexing errors
 
 # Inference
-model_name_or_path = "/home/gbugaj/tmp/models/layoutlmv3-base-finetuned-funsd/checkpoint-5000"
-model = AutoModelForTokenClassification.from_pretrained(model_name_or_path, ignore_mismatched_sizes=True)
+model_name_or_path = "/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000"
+# model = AutoModelForTokenClassification.from_pretrained(model_name_or_path, ignore_mismatched_sizes=True)
+model = AutoModelForTokenClassification.from_pretrained(model_name_or_path)
 
 # # AutoTokenizer
 # tokenizer = AutoTokenizer.from_pretrained(
@@ -294,7 +294,7 @@ print(index)
 
 # Token indices sequence length is longer than the specified maximum sequence length for this model (585 > 512). Running this sequence through the model will result in indexing errors
 # 129
-example = dataset["test"][133]
+example = dataset["test"][111]
 print(example.keys())
 
 image = example["image"]
@@ -302,9 +302,9 @@ words = example["tokens"]
 boxes = example["bboxes"]
 word_labels = example["ner_tags"]
 
-
-
 encoding = processor(image, words, boxes=boxes, word_labels=word_labels, truncation=True, padding="max_length", return_tensors="pt")
+
+# encoding = processor(image, words, boxes=boxes, word_labels=word_labels, padding="max_length", return_tensors="pt")
 for k,v in encoding.items():
   print(k,v.shape)
 
@@ -371,6 +371,19 @@ label2color = {
         "url": "darkorange",
         "phone": "darkmagenta",
         "other": "red",
+
+        "claim_number": "darkmagenta",
+        "claim_number_answer": "green",
+        "birthdate": "green",
+        "birthdate_answer": "red",
+        "billed_amt": "green",
+        "billed_amt_answer": "orange",
+        "paid_amt": "green",
+        "paid_amt_answer": "blue",
+        "check_amt": "orange",
+        "check_amt_answer": "darkmagenta",
+        "check_number": "orange",
+        "check_number_answer": "blue",
     }
 
 for prediction, box in zip(true_predictions, true_boxes):
@@ -392,3 +405,13 @@ for word, box, label in zip(example['tokens'], example['bboxes'], example['ner_t
   draw.text((box[0] + 10, box[1] - 10), actual_label, fill=label2color[actual_label], font=font)
 
 image.save("/tmp/tensors/real.png")
+
+#
+# sudo mount /mnt/data/marie-ai && docker restart $(docker ps -q)
+# sudo sh -c "truncate -s 0 /var/lib/docker/containers/*/*-json.log"
+# docker stop $(docker ps -q)
+# docker stop $(docker ps -q) && docker rm $(docker ps --filter status=exited -q)
+# cd ~/dev/marie-ai/docker-util && ./run-all.sh
+
+
+# 005 006 008 009 001 002 003 004 005 006 008 010 013 014 015 016

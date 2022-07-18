@@ -57,7 +57,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.2.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.4.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -79,25 +79,37 @@ class Funsd(datasets.GeneratorBasedBuilder):
                             names=[
                                 "O",
                                 'B-MEMBER_NAME', 'I-MEMBER_NAME',
-                                'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
                                 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER',
-                                'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER',
                                 'B-PAN', 'I-PAN',
-                                'B-PAN_ANSWER', 'I-PAN_ANSWER',
+                                'B-PATIENT_NAME', 'I-PATIENT_NAME',
                                 'B-DOS', 'I-DOS',
                                 'B-DOS_ANSWER', 'I-DOS_ANSWER',
-                                'B-PATIENT_NAME', 'I-PATIENT_NAME',
                                 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER',
+                                'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
+                                'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER',
+                                'B-PAN_ANSWER', 'I-PAN_ANSWER',
+                                'B-ADDRESS', 'I-ADDRESS',
+                                'B-GREETING', 'I-GREETING',
                                 'B-HEADER', 'I-HEADER',
-                                'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
                                 'B-LETTER_DATE', 'I-LETTER_DATE',
                                 'B-PARAGRAPH', 'I-PARAGRAPH',
-                                'B-ADDRESS', 'I-ADDRESS',
                                 'B-QUESTION', 'I-QUESTION',
                                 'B-ANSWER', 'I-ANSWER',
+                                'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
                                 'B-PHONE', 'I-PHONE',
                                 'B-URL', 'I-URL',
-                                'B-GREETING', 'I-GREETING',
+                                'B-CLAIM_NUMBER', 'I-CLAIM_NUMBER',
+                                'B-CLAIM_NUMBER_ANSWER', 'I-CLAIM_NUMBER_ANSWER',
+                                'B-BIRTHDATE', 'I-BIRTHDATE',
+                                'B-BIRTHDATE_ANSWER', 'I-BIRTHDATE_ANSWER',
+                                'B-BILLED_AMT', 'I-BILLED_AMT',
+                                'B-BILLED_AMT_ANSWER', 'I-BILLED_AMT_ANSWER',
+                                'B-PAID_AMT', 'I-PAID_AMT',
+                                'B-PAID_AMT_ANSWER', 'I-PAID_AMT_ANSWER',
+                                'B-CHECK_AMT', 'I-CHECK_AMT',
+                                'B-CHECK_AMT_ANSWER', 'I-CHECK_AMT_ANSWER',
+                                'B-CHECK_NUMBER', 'I-CHECK_NUMBER',
+                                'B-CHECK_NUMBER_ANSWER', 'I-CHECK_NUMBER_ANSWER',
                             ]
                         )
                     ),
@@ -119,7 +131,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
-        downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
+        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
         
 
         return [
