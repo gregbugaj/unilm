@@ -4,7 +4,6 @@ import random
 import numpy as np
 import torch
 import transformers
-from torch.nn import DataParallel
 from PIL import Image, ImageDraw, ImageFont
 
 from torch.utils.data import DataLoader
@@ -48,10 +47,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parall
 # os.environ['TRANSFORMERS_CACHE'] = '/tmp/cache/'
 print(transformers.__version__)
 
-
-# cache_dir, data_dir
-# dataset = load_dataset("nielsr/funsd")
-dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/mnt/data/cache")
+dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/data/cache")
 
 # print(dataset['train'].features)
 print(dataset['train'].features['bboxes'])
@@ -112,6 +108,7 @@ else:
     label_list = get_label_list(dataset["train"][label_column_name])
     id2label = {k: v for k,v in enumerate(label_list)}
     label2id = {v: k for k,v in enumerate(label_list)}
+    
 num_labels = len(label_list)
 
 
@@ -124,7 +121,7 @@ def prepare_examples(examples):
   boxes = examples[boxes_column_name]
   word_labels = examples[label_column_name]
 
-  encoding = processor(images, words, boxes=boxes, word_labels=word_labels,truncation=True,  padding="max_length")
+  encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True,  padding="max_length")
   return encoding
 
 # we need to define custom features for `set_format` (used later on) to work properly
@@ -137,8 +134,8 @@ features = Features({
 })
 
 # We
-dataset['train'] = dataset['train'].shuffle(seed=42)
-dataset['test'] = dataset['test'].shuffle(seed=42)
+# dataset['train'] = dataset['train'].shuffle(seed=42)
+# dataset['test'] = dataset['test'].shuffle(seed=42)
 
 train_dataset = dataset["train"].map(
     prepare_examples,
@@ -157,10 +154,6 @@ eval_dataset = dataset["test"].map(
 )
 
 
-# dataset['train'] = dataset['train'][:10]
-# dataset['test']  = dataset['test'][:10]
-
-
 example = train_dataset[0]
 processor.tokenizer.decode(example["input_ids"])
 train_dataset.set_format("torch")
@@ -174,7 +167,6 @@ for id, label in zip(train_dataset[0]["input_ids"], train_dataset[0]["labels"]):
   print(processor.tokenizer.decode([id]), label.item())
 
 
-import numpy as np
 
 return_entity_level_metrics = False
 metric = load_metric("seqeval")
@@ -214,27 +206,24 @@ def compute_metrics(p):
 
 
 # Define the model
-
-
-model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-base",
-                                                         id2label=id2label,
-                                                         label2id=label2id)
+model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-base",id2label=id2label,label2id=label2id)
 
 training_args = TrainingArguments(
                                   max_steps=50000,
-                                  save_steps = 2000,
+                                  save_steps = 250,
                                   per_device_train_batch_size=8,
                                   per_device_eval_batch_size=2,
                                   learning_rate=1e-5,
                                   evaluation_strategy="steps",
-                                  eval_steps=2000,
+                                  eval_steps=250,
                                   load_best_model_at_end=True,
                                   metric_for_best_model="f1",
-                                  output_dir="/mnt/data/models/layoutlmv3-base-finetuned-funsd",
-                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000",
-                                  fp16=True
+                                  output_dir="/data/models/layoutlmv3-base-finetuned-funsd",
+                                #   resume_from_checkpoint="/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000",
+                                #   fp16=True
                                 )
-
+print('training_args*************************')
+print(training_args)
 # Initialize our Trainer
 trainer = Trainer(
     model=model,
@@ -246,7 +235,7 @@ trainer = Trainer(
     compute_metrics=compute_metrics,
 )
 
-if False:
+if True:
     # checkpoint = last_checkpoint if last_checkpoint else None
     train_result = trainer.train()
 
@@ -269,7 +258,7 @@ if False:
 # Token indices sequence length is longer than the specified maximum sequence length for this model (541 > 512). Running this sequence through the model will result in indexing errors
 
 # Inference
-model_name_or_path = "/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000"
+model_name_or_path = "/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000"
 # model = AutoModelForTokenClassification.from_pretrained(model_name_or_path, ignore_mismatched_sizes=True)
 model = AutoModelForTokenClassification.from_pretrained(model_name_or_path)
 
@@ -414,4 +403,3 @@ image.save("/tmp/tensors/real.png")
 # cd ~/dev/marie-ai/docker-util && ./run-all.sh
 
 
-# 005 006 008 009 001 002 003 004 005 006 008 010 013 014 015 016
