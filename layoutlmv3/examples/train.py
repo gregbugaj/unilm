@@ -222,16 +222,16 @@ model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-b
 
 training_args = TrainingArguments(
                                   max_steps=50000,
-                                  save_steps = 2000,
+                                  save_steps = 1000,
                                   per_device_train_batch_size=8,
-                                  per_device_eval_batch_size=2,
-                                  learning_rate=1e-5,
+                                  per_device_eval_batch_size=4,
+                                  learning_rate=5e-5,
                                   evaluation_strategy="steps",
-                                  eval_steps=2000,
+                                  eval_steps=1000,
                                   load_best_model_at_end=True,
                                   metric_for_best_model="f1",
                                   output_dir="/mnt/data/models/layoutlmv3-base-finetuned-funsd",
-                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000",
+                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-1000",
                                   fp16=True
                                 )
 
@@ -246,7 +246,7 @@ trainer = Trainer(
     compute_metrics=compute_metrics,
 )
 
-if False:
+if True:
     # checkpoint = last_checkpoint if last_checkpoint else None
     train_result = trainer.train()
 
@@ -269,7 +269,7 @@ if False:
 # Token indices sequence length is longer than the specified maximum sequence length for this model (541 > 512). Running this sequence through the model will result in indexing errors
 
 # Inference
-model_name_or_path = "/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000"
+model_name_or_path = "/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-5000"
 # model = AutoModelForTokenClassification.from_pretrained(model_name_or_path, ignore_mismatched_sizes=True)
 model = AutoModelForTokenClassification.from_pretrained(model_name_or_path)
 

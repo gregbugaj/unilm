@@ -80,7 +80,10 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
                     "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
                     "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names = ["O", 'B-MEMBER_NAME', 'I-MEMBER_NAME', 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
+                            names = [
+                             "O",
+                             'B-MEMBER_NAME', 'I-MEMBER_NAME',
+                             'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
                              'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER', 
                              'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER', 
                              'B-PAN', 'I-PAN', 'B-PAN_ANSWER', 'I-PAN_ANSWER', 'B-DOS', 'I-DOS', 'B-DOS_ANSWER', 'I-DOS_ANSWER', 
@@ -114,7 +117,8 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         # downloaded_file = "/home/greg/dataset/funsd"
         downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
-        
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
+
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
