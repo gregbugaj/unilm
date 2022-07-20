@@ -134,12 +134,12 @@ featuresXX = Features({
 })
 
 
+print("Features Train")
 print(features)
-
+print("Features Maid")
 print(featuresXX)
 
-os.exit()
-features = Features({
+featuresXXX = Features({
     'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
     'input_ids': Sequence(feature=Value(dtype='int64')),
     'attention_mask': Sequence(Value(dtype='int64')),
