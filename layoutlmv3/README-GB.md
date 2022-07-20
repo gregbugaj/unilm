@@ -12,6 +12,22 @@ pip install -U datasets huggingface_hub
 pip install -U tensorboard
 ```
 
+
+## Training 
+Launch traing
+
+```
+python -m torch.distributed.launch --nproc_per_node=1 ./train.py
+``` 
+
+
+
+```
+tensorboard --logdir=./logs
+```
+
+
+
 LARGE
 
 ***** eval metrics *****

@@ -4,12 +4,16 @@ Reference: https://huggingface.co/datasets/nielsr/funsd/blob/main/funsd.py
 '''
 import json
 import os
+from re import L
 
 from PIL import Image
 
 import datasets
 
 def load_image(image_path):
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(image_path)
+
     image = Image.open(image_path).convert("RGB")
     w, h = image.size
     return image, (w, h)
@@ -57,7 +61,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.4.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.5.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -130,30 +134,19 @@ class Funsd(datasets.GeneratorBasedBuilder):
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
-        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
         # /data/dataset/private/corr-indexer-augmented/dataset
 
         return [
             datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
+                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
             ),
             datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
+                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
             ),
         ]
 
-    def _split_generatorsXXXXXXX(self, dl_manager):
-        """Returns SplitGenerators."""
-        downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
-            ),
-        ]
 
     def get_line_bbox(self, bboxs):
         x = [bboxs[i][j] for i in range(len(bboxs)) for j in range(0, len(bboxs[i]), 2)]
@@ -173,6 +166,9 @@ class Funsd(datasets.GeneratorBasedBuilder):
             tokens = []
             bboxes = []
             ner_tags = []
+
+            if guid == 1001:
+                break
 
             file_path = os.path.join(ann_dir, file)
             with open(file_path, "r", encoding="utf8") as f:
