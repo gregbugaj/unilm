@@ -125,6 +125,20 @@ def prepare_examples(examples):
   return encoding
 
 # we need to define custom features for `set_format` (used later on) to work properly
+featuresXX = Features({
+    'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
+    'input_ids': Sequence(feature=Value(dtype='int64')),
+    'attention_mask': Sequence(Value(dtype='int64')),
+    'bbox': Array2D(dtype="int64", shape=(512, 4)),
+    'labels': Sequence(feature=Value(dtype='int64')),
+})
+
+
+print(features)
+
+print(featuresXX)
+
+os.exit()
 features = Features({
     'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
     'input_ids': Sequence(feature=Value(dtype='int64')),
@@ -132,6 +146,8 @@ features = Features({
     'bbox': Array2D(dtype="int64", shape=(512, 4)),
     'labels': Sequence(feature=Value(dtype='int64')),
 })
+
+
 
 # We
 # dataset['train'] = dataset['train'].shuffle(seed=42)
