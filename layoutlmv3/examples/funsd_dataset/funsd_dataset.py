@@ -133,10 +133,11 @@ class Funsd(datasets.GeneratorBasedBuilder):
 
         downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+        downloaded_file = "/data/dataset/private/corr-indexer-augmented"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
-        
+        # /data/dataset/private/corr-indexer-augmented/dataset
 
         return [
             datasets.SplitGenerator(
