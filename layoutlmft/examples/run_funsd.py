@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from gc import callbacks
 import logging
 import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
+
+import torch
 from PIL import Image, ImageDraw, ImageFont
 
 import numpy as np
@@ -17,7 +18,18 @@ import transformers
 from layoutlmft.data import DataCollatorForKeyValueExtraction
 from layoutlmft.data.data_args import DataTrainingArguments
 from layoutlmft.models.model_args import ModelArguments
-from layoutlmft.trainers import FunsdTrainer as Trainer
+# from layoutlmft.trainers import FunsdTrainer as Trainer
+
+from transformers import TrainingArguments, Trainer
+from transformers.data.data_collator import default_data_collator
+
+
+use_cuda = torch.cuda.is_available()
+device = torch.device('cuda:0' if use_cuda else 'cpu')
+print(device)
+device_ids = [0]
+
+
 from transformers import (
     AutoConfig,
     AutoModelForTokenClassification,
@@ -34,24 +46,25 @@ from transformers.utils import check_min_version
 from transformers import LayoutLMv2Processor, LayoutLMv2FeatureExtractor, LayoutLMv2ForTokenClassification, \
     LayoutLMv2TokenizerFast
 
+# Calling this from here prevents : "AttributeError: module 'detectron2' has no attribute 'config'"
+from detectron2.config import get_cfg
+
+
 import multiprocessing as mp
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
-os.environ['TRANSFORMERS_CACHE'] = '/data/cache/'
+os.environ['TRANSFORMERS_CACHE'] = '/mnt/data/cache/'
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.5.0")
 
 logger = logging.getLogger(__name__)
 
-feature_size = 224  # 224
-batch_size   = 32 #  28
- 
 ##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 # 115003 / 627003
 
 # feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
-feature_extractor = LayoutLMv2FeatureExtractor(size = feature_size, apply_ocr=False)
+feature_extractor = LayoutLMv2FeatureExtractor(apply_ocr=False)
 tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-large-uncased")# microsoft/layoutlmv2-base-uncased
 processor = LayoutLMv2Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
@@ -164,7 +177,7 @@ def main():
     # datasets = load_dataset(os.path.abspath(layoutlmft.data.datasets.funsd.__file__))
 
     # datasets = load_dataset(os.path.abspath(layoutlmft.funsd_dataset.__file__))
-    datasets = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/data/cache/")
+    datasets = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/mnt/data/cache/")
 
     print(datasets)
     labels = datasets['train'].features['ner_tags'].feature.names
@@ -178,9 +191,6 @@ def main():
     print("ID2Label : ")
     print(id2label)
     print(label2id) 
-
-    # os.exit()
-
 
     if training_args.do_train:
         column_names = datasets["train"].column_names
@@ -226,7 +236,6 @@ def main():
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
-
         hidden_dropout_prob = .5,
         attention_probs_dropout_prob = .5,
     )
@@ -253,8 +262,15 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
-    # print(tokenizer)
+    use_cuda = torch.cuda.is_available()
+    device = torch.device('cuda' if use_cuda else 'cpu')
+    print("DEVICE FOUND:")
+    print(device)
 
+    # if use_cuda:
+    #     model = DataParallel(model,device_ids=device_ids)
+    model.to(device)
+    model.cuda()
 
     # Tokenizer check: this script requires a fast tokenizer.
     if not isinstance(tokenizer, PreTrainedTokenizerFast):
@@ -264,69 +280,13 @@ def main():
             "requirement"
         )
 
-
-    print('Tokenzier type : ')
-    print(type(tokenizer))
-
     # Preprocessing the dataset
     # Padding strategy
     padding = "max_length" if data_args.pad_to_max_length else False
 
-    # Tokenize all texts and align the labels with them.
-    def tokenize_and_align_labels(examples):
-
-        print("-----------")
-        print(text_column_name)
-        tokenized_inputs = tokenizer(
-            examples[text_column_name],
-            padding=padding,
-            truncation=True,
-            return_overflowing_tokens=True,
-            # We use this argument because the texts in our dataset are lists of words (with a label for each word).
-            is_split_into_words=True,
-        )
-
-        labels = []
-        bboxes = []
-        images = []
-        for batch_index in range(len(tokenized_inputs["input_ids"])):
-            word_ids = tokenized_inputs.word_ids(batch_index=batch_index)
-            org_batch_index = tokenized_inputs["overflow_to_sample_mapping"][batch_index]
-
-            label = examples[label_column_name][org_batch_index]
-            bbox = examples["bboxes"][org_batch_index]
-            image = examples["image"][org_batch_index]
-            previous_word_idx = None
-            label_ids = []
-            bbox_inputs = []
-            for word_idx in word_ids:
-                # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-                # ignored in the loss function.
-                if word_idx is None:
-                    label_ids.append(-100)
-                    bbox_inputs.append([0, 0, 0, 0])
-                # We set the label for the first token of each word.
-                elif word_idx != previous_word_idx:
-                    label_ids.append(label_to_id[label[word_idx]])
-                    bbox_inputs.append(bbox[word_idx])
-                # For the other tokens in a word, we set the label to either the current label or -100, depending on
-                # the label_all_tokens flag.
-                else:
-                    label_ids.append(label_to_id[label[word_idx]] if data_args.label_all_tokens else -100)
-                    bbox_inputs.append(bbox[word_idx])
-                previous_word_idx = word_idx
-            labels.append(label_ids)
-            bboxes.append(bbox_inputs)
-            images.append(image)
-        tokenized_inputs["labels"] = labels
-        tokenized_inputs["bbox"] = bboxes
-        tokenized_inputs["image"] = images
-        return tokenized_inputs
-
-
     # we need to define custom features
     features = Features({
-        'image': Array3D(dtype="int64", shape=(3, feature_size, feature_size)), # 224
+        'image': Array3D(dtype="int64", shape=(3, 224, 224)), # 224
         'input_ids': Sequence(feature=Value(dtype='int64')),
         'attention_mask': Sequence(Value(dtype='int64')),
         'token_type_ids': Sequence(Value(dtype='int64')),
@@ -340,10 +300,9 @@ def main():
         words = examples['words']
         boxes = examples['bboxes']
         word_labels = examples['ner_tags']
-        
         encoded_inputs = processor(images, words, boxes=boxes, word_labels=word_labels, padding="max_length", truncation=True)
-
         return encoded_inputs
+
 
     if training_args.do_train:
         if "train" not in datasets:
@@ -455,7 +414,7 @@ def main():
         tokenizer=tokenizer,
         data_collator=data_collator,
         compute_metrics=compute_metrics,
-        callbacks = [ModelTrackingCallback]
+        callbacks = [ModelTrackingCallback],
     )
 
 
