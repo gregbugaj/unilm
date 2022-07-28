@@ -7,20 +7,6 @@ import os
 
 import datasets
 
-from re import L
-
-from PIL import Image
-import multiprocessing as mp
-from concurrent.futures.thread import ThreadPoolExecutor
-import concurrent.futures
-import time
-from multiprocessing import Pool
-
-from PIL import Image, ImageDraw, ImageFont
-import numpy as np
-import torch
-
-
 from layoutlmft.data.image_utils import load_image, normalize_bbox
 
 
@@ -50,13 +36,8 @@ class FunsdConfig(datasets.BuilderConfig):
 class Funsd(datasets.GeneratorBasedBuilder):
     """dataset."""
 
-    # 1.10.1 -> LV3 single box layout (GOOD)
-    # 1.10.2 -> LV3 mulibox layout (????)
-    # 1.10.3 -> LV3 mulibox layout / small dataset
-    
-
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.10.3"), description="FUNSD Like dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.10.0"), description="FUNSD dataset"),
     ]
 
     def _info(self):
@@ -147,29 +128,14 @@ class Funsd(datasets.GeneratorBasedBuilder):
         bbox = [[x0, y0, x1, y1] for _ in range(len(bboxs))]
         return bbox
 
-
     def _generate_examples(self, filepath):
         logger.info("⏳ Generating examples from = %s", filepath)
         ann_dir = os.path.join(filepath, "annotations")
         img_dir = os.path.join(filepath, "images")
-
-        items = sorted(os.listdir(ann_dir))
-        np.random.shuffle(items)
-
-        stop = int(len(items) *.25)
-        # stop = int(len(items))
-        print(f"stop = {stop}")
-        font = ImageFont.load_default()
-
-        for guid, file in enumerate(items):
-            if guid == stop:
-                break
-
-            print(f"{guid} : {file}")
+        for guid, file in enumerate(sorted(os.listdir(ann_dir))):
             tokens = []
             bboxes = []
             ner_tags = []
-            bboxes_raw = []
 
             file_path = os.path.join(ann_dir, file)
             with open(file_path, "r", encoding="utf8") as f:
@@ -177,9 +143,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
             image_path = os.path.join(img_dir, file)
             image_path = image_path.replace("json", "png")
             image, size = load_image(image_path)
-            # image_pil = Image.open(image_path).convert("RGB")
-            word_index = 0
             for item in data["form"]:
+                
                 cur_line_bboxes = []
                 words, label = item["words"], item["label"]
 
@@ -199,106 +164,22 @@ class Funsd(datasets.GeneratorBasedBuilder):
                     continue
                 if label == "other":
                     for w in words:
-                        # TODO: How did we endup with O-Token with size of [0,0,W,H]
-                        other_box  = normalize_bbox(w["box"], size)
-                        if other_box[0]== 0 and other_box[1] == 0:
-                            continue
                         tokens.append(w["text"])
                         ner_tags.append("O")
-                        cur_line_bboxes.append(other_box)
-                        bboxes_raw.append(w["box"])
+                        cur_line_bboxes.append(normalize_bbox(w["box"], size))
                 else:
                     tokens.append(words[0]["text"])
                     ner_tags.append("B-" + label.upper())
                     cur_line_bboxes.append(normalize_bbox(words[0]["box"], size))
-                    bboxes_raw.append(words[0]["box"])
-
                     for w in words[1:]:
                         tokens.append(w["text"])
                         ner_tags.append("I-" + label.upper())
                         cur_line_bboxes.append(normalize_bbox(w["box"], size))
-                        bboxes_raw.append(w["box"])
                 # by default: --segment_level_layout 1
                 # if do not want to use segment_level_layout, comment the following line
-                # cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
-
-                if True:
-                    boxed = True
-                    label = label.upper()
-                    if label == "OTHER" or label== "ANSWER" or label == "PARAGRAPH" or label == "ADDRESS" or label == "GREETING" or label == "HEADER" :
-                        boxed = False
-
-                    if boxed:
-                        # print(f"B {label} : {words} >> {cur_line_bboxes}")
-                        cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
-                        # pass
-                        
+                cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
+                # box = normalize_bbox(item["box"], size)
+                # cur_line_bboxes = [box for _ in range(len(words))]
                 bboxes.extend(cur_line_bboxes)
-
-            if False:
-                draw = ImageDraw.Draw(image_pil)
-                # print(f"B = {bboxes_raw}")
-                bboxes_raw = self.get_line_bbox(bboxes) 
-                # print(f"A = {bboxes_raw}")
-                for tag, box in zip(ner_tags, bboxes):
-                    print(f"TAG = {tag} : {box}")
-                    text = f"{word_index}"
-                    draw.rectangle(box, outline='red')
-                    draw.text((box[0] + 10, box[1] - 10), text=text, fill='blue' )
-                    # print(f"\t\t\t {word_index} => {tag} -> {words_lower}")
-                    word_index +=1
-                image_pil.save(f"/tmp/snippet/{guid}.png")
-                # os.exit()
-        
-        if len(bboxes) != len(tokens):
-            print("ASSERTION ERROR")
-            print(len(bboxes))
-            print(len(tokens))
-            os.exit()
-
-        assert len(bboxes) == len(tokens)
-        yield guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
-                        "image": image, "image_path": image_path}
-
-
-
-    def _generate_examplesXXXX(self, filepath):
-        logger.info("⏳ Generating examples from = %s", filepath)
-        ann_dir = os.path.join(filepath, "annotations")
-        img_dir = os.path.join(filepath, "images")
-
-        args = []
-        items = sorted(os.listdir(ann_dir))
-        np.random.shuffle(items)
-
-        stop = int(len(items) *.1)
-        stop = int(len(items))
-        
-        print(len(items))
-        for guid, file in enumerate(items):
-            file_path = os.path.join(ann_dir, file)
-            __args = (filepath, guid, file)
-            args.append(__args)
-            if guid == stop:
-                break
-
-        results = []
-        start = time.time()
-        processes = int(mp.cpu_count() * .95)
-        processes = 4
-
-        print(f"\nPool Executor: {processes}")
-        print("Time elapsed: %s" % (time.time() - start))
-
-        pool = Pool(processes=processes, maxtasksperchild=1024)
-        pool_results = pool.starmap(self._generate_, args)
-
-        pool.close()
-        pool.join()
-
-        print("Time elapsed[submitted]: %s" % (time.time() - start))
-        for r in pool_results:
-            # print("Time elapsed[result]: %s  , %s" % (time.time() - start, r))
-            yield r
-
-        print("Time elapsed[all]: %s" % (time.time() - start))                         
+            yield guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
+                         "image": image, "image_path": image_path}
