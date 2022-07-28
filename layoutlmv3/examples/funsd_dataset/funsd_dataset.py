@@ -141,9 +141,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
-        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-converted"
-        downloaded_file = "/data/dataset/private/corr-indexer-augmented"
-        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
 
         return [
@@ -214,7 +213,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
                     cur_line_bboxes.append(normalize_bbox(w["box"], size))
             # cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
 
-            if True:
+            if False:
                 boxed = True
                 label = label.upper()
                 if label == "OTHER" or label== "ANSWER" or label == "PARAGRAPH" or label == "ADDRESS" or label == "GREETING" or label == "HEADER" :
@@ -263,7 +262,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
         print("Time elapsed: %s" % (time.time() - start))
 
         processes = int(mp.cpu_count() * .95)
-        # processes = 1
+        processes = 8
         pool = Pool(processes=processes)
         pool_results = pool.starmap(self._generate_, args)
 
