@@ -18,9 +18,9 @@ import transformers
 from layoutlmft.data import DataCollatorForKeyValueExtraction
 from layoutlmft.data.data_args import DataTrainingArguments
 from layoutlmft.models.model_args import ModelArguments
-# from layoutlmft.trainers import FunsdTrainer as Trainer
+from layoutlmft.trainers import FunsdTrainer as Trainer
 
-from transformers import TrainingArguments, Trainer
+# from transformers import TrainingArguments, Trainer
 from transformers.data.data_collator import default_data_collator
 
 
@@ -60,11 +60,9 @@ check_min_version("4.5.0")
 
 logger = logging.getLogger(__name__)
 
-##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
-# 115003 / 627003
-
 # feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
-feature_extractor = LayoutLMv2FeatureExtractor(apply_ocr=False)
+# feature_extractor = LayoutLMv2FeatureExtractor(apply_ocr=False)
+feature_extractor = LayoutLMv2FeatureExtractor(size = 224, apply_ocr=False, do_resize = True, resample = Image.LANCZOS)
 tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-large-uncased")# microsoft/layoutlmv2-base-uncased
 processor = LayoutLMv2Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
@@ -111,17 +109,6 @@ class ModelTrackingCallback(TrainerCallback):
                 except Exception as ex:
                     print(ex)
                 
-
-    # TrainerState(epoch=0.11160714285714286, global_step=50, max_steps=22400, num_train_epochs=50, total_flos=967199925731328.0, 
-    # log_history=[{'loss': 1.4162, 'learning_rate': 4.991960696739616e-05, 'epoch': 0.11, 'step': 50},
-    #  {'eval_loss': 0.34052422642707825, 'eval_precision': 0.675246152877207, 'eval_recall': 0.7972832283972039, 'eval_f1': 0.7312077294685991, 'eval_accuracy': 0.9114714962790795, 
-    #  'eval_runtime': 29.2985, 'eval_samples_per_second': 40.787, 'eval_steps_per_second': 10.205, 'epoch': 0.11, 'step': 50}], 
-    #  best_metric=0.34052422642707825, best_model_checkpoint='/home/gbugaj/dev/unilm/layoutlmft/examples/checkpoints-tuned-pan/checkpoint-50', 
-    #  is_local_process_zero=False, is_world_process_zero=False, is_hyper_param_search=False, trial_name=None, trial_params=None)
-
-
-
-
             
 def main():
     # See all possible arguments in layoutlmft/transformers/training_args.py
@@ -236,8 +223,9 @@ def main():
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
-        hidden_dropout_prob = .5,
-        attention_probs_dropout_prob = .5,
+        hidden_dropout_prob = .3,
+        attention_probs_dropout_prob = .2,
+        has_visual_segment_embedding = True
     )
 
 
