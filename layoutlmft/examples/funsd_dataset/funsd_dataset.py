@@ -153,7 +153,7 @@ class FunsdLikeDataset(datasets.GeneratorBasedBuilder):
         # downloaded_file = "/home/greg/dataset/funsd"
         downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-converted"
         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
-        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
 
         return [
             datasets.SplitGenerator(

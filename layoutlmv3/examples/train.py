@@ -67,7 +67,7 @@ print("ID2Label : ")
 print(id2label)
 print(label2id)
 
-if True:
+if False:
     example = dataset["train"][0]
     # example["image"].show()
     words, boxes, ner_tags = example["tokens"], example["bboxes"], example["ner_tags"]
@@ -88,10 +88,12 @@ config = AutoConfig.from_pretrained (
     cache_dir="/mnt/data/cache",
     input_size=224,
     hidden_dropout_prob = .2,
-    attention_probs_dropout_prob = .1,
+    attention_probs_dropout_prob = .2,
     has_relative_attention_bias=False
 )
 
+# config.hidden_dropout_prob = 0.2
+# config.attention_probs_dropout_prob = 0.1
 
 
 # Max model size is 512, so we will need to handle any documents larger thank that
@@ -129,8 +131,8 @@ else:
 num_labels = len(label_list)
 
 
-print(label_list)
-print(id2label)
+# print(label_list)
+# print(id2label)
 
 def prepare_examples(examples):
   images = examples[image_column_name]
@@ -159,7 +161,7 @@ train_dataset = dataset["train"].map(
     batched=True,
     remove_columns=column_names,
     features=features,
-    num_proc = 2
+    num_proc = 4
 )
 
 eval_dataset = dataset["test"].map(
@@ -167,7 +169,7 @@ eval_dataset = dataset["test"].map(
     batched=True,
     remove_columns=column_names,
     features=features,
-    num_proc = 2
+    num_proc = 4
 )
 
 
@@ -180,8 +182,8 @@ example = train_dataset[0]
 for k,v in example.items():
     print(k,v.shape)
 
-for id, label in zip(train_dataset[0]["input_ids"], train_dataset[0]["labels"]):
-  print(processor.tokenizer.decode([id]), label.item())
+# for id, label in zip(train_dataset[0]["input_ids"], train_dataset[0]["labels"]):
+#   print(processor.tokenizer.decode([id]), label.item())
 
 
 return_entity_level_metrics = False
@@ -230,23 +232,22 @@ model = LayoutLMv3ForTokenClassification.from_pretrained(
     # label2id=label2id
 )
 
-# model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-base",id2label=id2label,label2id=label2id)
-
 training_args = TrainingArguments(
-                                  max_steps=25000,
-                                  save_steps = 1000,
-                                  per_device_train_batch_size=4,
-                                  per_device_eval_batch_size=1,
-                                  learning_rate=5e-5,
-                                  evaluation_strategy="steps",
-                                  eval_steps=1000,
-                                  load_best_model_at_end=True,
-                                  metric_for_best_model="f1",
-                                  output_dir="/mnt/data/models/layoutlmv3-large-fullyannotated",
-                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-large-finetuned-small-100/checkpoint-750",
-                                  fp16=True,
-                                )
-print('training_args*************************')
+                  max_steps=10000,
+                  save_steps = 1000,
+                  per_device_train_batch_size=4,
+                  per_device_eval_batch_size=1,
+                  learning_rate=5e-5,
+                  evaluation_strategy="steps",
+                  eval_steps=1000,
+                  load_best_model_at_end=True,
+                  metric_for_best_model="f1",
+                  output_dir="/mnt/data/models/layoutlmv3-large-fullyannotated",
+                  # resume_from_checkpoint="/mnt/data/models/layoutlmv3-large-finetuned-small-100/checkpoint-750",
+                  fp16=True,
+                )
+
+print('training_args *************************')
 print(training_args)
 
 # Initialize our Trainer

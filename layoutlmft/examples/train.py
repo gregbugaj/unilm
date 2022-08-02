@@ -9,8 +9,8 @@ from torch.utils.data import DataLoader
 from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2Processor, AdamW
 
 from transformers import LayoutLMv2Processor, LayoutLMv2FeatureExtractor, LayoutLMv2ForTokenClassification, \
-    LayoutLMv2TokenizerFast
-
+    LayoutLMv2TokenizerFast , LayoutLMv2Config
+ 
 
 from tqdm import tqdm
 
@@ -31,21 +31,6 @@ warnings.filterwarnings('ignore')
 # Spliting into multiple words/tokens
 # https://github.com/NielsRogge/Transformers-Tutorials/issues/41
 
-# https://towardsdatascience.com/fine-tuning-transformer-model-for-invoice-recognition-1e55869336d4
-# https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLM/Add_image_embeddings_to_LayoutLM.ipynb#scrollTo=VMYoOQuyp4NT
-# https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv2/CORD/Fine_tuning_LayoutLMv2ForTokenClassification_on_CORD.ipynb#scrollTo=NxahVHZ0NKq7
-
-
-# Complete CORD
-# https://github.com/katanaml/sparrow/blob/f18591947f2b1e26fbac045ba430e73af2c68f0c/research/app/Fine_tuning_LayoutLMv2ForTokenClassification_on_CORD_using_HuggingFace_Trainer_ipynb.ipynb
-
-
-# Sequence classificatin
-# https://colab.research.google.com/github/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv2/RVL-CDIP/Fine_tuning_LayoutLMv2ForSequenceClassification_on_RVL_CDIP.ipynb
-
-
-# {'ANSWER': {'precision': 0.6618106139438086, 'recall': 0.7861557478368356, 'f1': 0.7186440677966102, 'number': 809}, 'HEADER': {'precision': 0.4625, 'recall': 0.31092436974789917, 'f1': 0.3718592964824121, 'number': 119}, 'QUESTION': {'precision': 0.7798085291557877, 'recall': 0.8413145539906103, 'f1': 0.8093947606142727, 'number': 1065}, 'overall_precision': 0.7164383561643836, 'overall_recall': 0.787255393878575, 'overall_f1': 0.7501792971551519, 'overall_accuracy': 0.679780527667522
-# {'ANSWER': {'precision': 0.6998904709748083, 'recall': 0.7898640296662547, 'f1': 0.7421602787456447, 'number': 809}, 'HEADER': {'precision': 0.4375, 'recall': 0.17647058823529413, 'f1': 0.25149700598802394, 'number': 119}, 'QUESTION': {'precision': 0.8159448818897638, 'recall': 0.7784037558685446, 'f1': 0.7967323402210476, 'number': 1065}, 'overall_precision': 0.7531613555892767, 'overall_recall': 0.7471149021575514, 'overall_f1': 0.7501259445843829, 'overall_accuracy': 0.7541442913845435}
 
 use_cuda = torch.cuda.is_available()
 device= torch.device('cuda:0' if use_cuda else 'cpu')
@@ -71,13 +56,25 @@ print(id2label)
 print(label2id) 
 
 
-feature_size = 224 * 2 # 224
-batch_size   = 8 #  28
+feature_size = 224  # 224
+batch_size   = 12 #  28
  
 ##Next, let's use `LayoutLMv2Processor` to prepare the data for the model.
 # 115003 / 627003
 
-feature_extractor = LayoutLMv2FeatureExtractor(size = feature_size, apply_ocr=False)
+
+config = LayoutLMv2Config.from_pretrained(
+    num_labels=len(label2id),
+    finetuning_task=data_args.task_name,
+    cache_dir=model_args.cache_dir,
+    revision=model_args.model_revision,
+    use_auth_token=True if model_args.use_auth_token else None,
+    hidden_dropout_prob = .3,
+    attention_probs_dropout_prob = .1,
+)
+
+
+feature_extractor = LayoutLMv2FeatureExtractor(size = feature_size, apply_ocr=False, do_resize = True, resample = Image.LANCZOS)
 tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-large-uncased")
 processor = LayoutLMv2Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
@@ -152,8 +149,8 @@ os.makedirs(f"./checkpoints", exist_ok = True)
 ## Train the model
 
 if True:
-  # model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased', num_labels=len(labels))
-  model = LayoutLMv2ForTokenClassification.from_pretrained("/mnt/data/models/layoutlmv2-large-finetuned-funsd", num_labels=len(labels))
+  model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-large-uncased', num_labels=len(labels))
+  # model = LayoutLMv2ForTokenClassification.from_pretrained("/mnt/data/models/layoutlmv2-large-finetuned-funsd", num_labels=len(labels))
 
   # Set id2label and label2id
   model.config.id2label = id2label

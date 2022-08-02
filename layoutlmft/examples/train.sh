@@ -13,9 +13,10 @@ export MAX_JOBS=8
 # --resume_from_checkpoint /home/gbugaj/dev/unilm/layoutlmft/examples/checkpoints-tuned-pan/checkpoint-250 \
 # --deepspeed ds_config_gpu.json \
 
-#         
+# --greater_is_better false \
+# --metric_for_best_model loss \
 
-PYTHONPATH="$PWD" python -m torch.distributed.launch --nproc_per_node=1 run_funsd.py \
+PYTHONPATH="$PWD" python -m torch.distributed.launch --nproc_per_node=2 run_funsd.py \
         --model_name_or_path microsoft/layoutlmv2-large-uncased \
         --output_dir /mnt/data/models/layoutlmv2-large-finetuned-funsd\
         --overwrite_output_dir \
@@ -37,6 +38,5 @@ PYTHONPATH="$PWD" python -m torch.distributed.launch --nproc_per_node=1 run_funs
         --per_device_eval_batch_size 4 \
         --warmup_ratio 0.1 \
         --warmup_steps 10 \
-        --greater_is_better false \
-        --metric_for_best_model loss \
+        --learning_rate 1e-5
         --fp16

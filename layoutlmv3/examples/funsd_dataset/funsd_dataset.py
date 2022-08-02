@@ -71,7 +71,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.5.0"), description="FUNSD dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.8.0"), description="FUNSD like dataset, corr-indexing"),
     ]
 
     def _info(self):
@@ -124,10 +124,19 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-CHECK_AMT_ANSWER', 'I-CHECK_AMT_ANSWER',
                                 'B-CHECK_NUMBER', 'I-CHECK_NUMBER',
                                 'B-CHECK_NUMBER_ANSWER', 'I-CHECK_NUMBER_ANSWER',
+                                'B-LIST', 'I-LIST',
+                                'B-FOOTER', 'I-FOOTER',
+                                'B-DATE', 'I-DATE',
+                                'B-IDENTIFIER', 'I-IDENTIFIER',
+                                'B-PROC_CODE', 'I-PROC_CODE',
+                                'B-PROC_CODE_ANSWER', 'I-PROC_CODE_ANSWER',
+                                'B-PROVIDER', 'I-PROVIDER',
+                                'B-PROVIDER_ANSWER', 'I-PROVIDER_ANSWER',
+                                'B-MONEY', 'I-MONEY',
+                                'B-COMPANY', 'I-COMPANY',
                             ]
                         )
                     ),
-
 
                     "image": datasets.features.Image(),
                 }
@@ -141,8 +150,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
-        # downloaded_file = "/data/dataset/private/corr-indexer-augmented"
-        downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
+        downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
 
         return [
@@ -165,10 +174,10 @@ class Funsd(datasets.GeneratorBasedBuilder):
         bbox = [[x0, y0, x1, y1] for _ in range(len(bboxs))]
         return bbox
 
-    def _generate_(self, filepath, guid, file):
-        logger.info("⏳ Generating examples from = %s", filepath)
-        ann_dir = os.path.join(filepath, "annotations")
-        img_dir = os.path.join(filepath, "images")
+    def _generate_(self, guid, file):
+        logger.info("⏳ Generating examples from = %s", self.filepath)
+        ann_dir = os.path.join(self.filepath, "annotations")
+        img_dir = os.path.join(self.filepath, "images")
 
         print(guid)
         tokens = []
@@ -230,7 +239,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
         if len(bboxes) == 0:
             payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
             print(f"Empty Boxes for : {file_path}")
-            print(payload)
+            # print(payload)
             return 
 
         return guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
@@ -246,12 +255,14 @@ class Funsd(datasets.GeneratorBasedBuilder):
         items = sorted(os.listdir(ann_dir))
         np.random.shuffle(items)
 
-        stop = int(len(items) *.25)
+        stop = int(len(items) *.50)
         stop = int(len(items))
         
+        # https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
+        self.filepath = filepath
         for guid, file in enumerate(items):
             file_path = os.path.join(ann_dir, file)
-            __args = (filepath, guid, file)
+            __args = (guid, file)
             args.append(__args)
             if guid == stop:
                 break
@@ -261,8 +272,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
         print("\nPool Executor:")
         print("Time elapsed: %s" % (time.time() - start))
 
-        processes = int(mp.cpu_count() * .95)
-        processes = 8
+        processes = int(mp.cpu_count() * .90)
+        processes = 4
         pool = Pool(processes=processes)
         pool_results = pool.starmap(self._generate_, args)
 
