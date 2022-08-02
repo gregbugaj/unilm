@@ -233,22 +233,21 @@ model = LayoutLMv3ForTokenClassification.from_pretrained(
 # model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-base",id2label=id2label,label2id=label2id)
 
 training_args = TrainingArguments(
-                                  max_steps=5000,
-                                  save_steps = 250,
+                                  max_steps=25000,
+                                  save_steps = 1000,
                                   per_device_train_batch_size=4,
                                   per_device_eval_batch_size=1,
                                   learning_rate=5e-5,
                                   evaluation_strategy="steps",
-                                  eval_steps=250,
+                                  eval_steps=1000,
                                   load_best_model_at_end=True,
                                   metric_for_best_model="f1",
-                                  output_dir="/mnt/data/models/layoutlmv3-large-finetuned-small-100",
-                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-large-finetuned-small/checkpoint-4250",
+                                  output_dir="/mnt/data/models/layoutlmv3-large-fullyannotated",
+                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-large-finetuned-small-100/checkpoint-750",
                                   fp16=True,
                                 )
 print('training_args*************************')
 print(training_args)
-
 
 # Initialize our Trainer
 trainer = Trainer(
