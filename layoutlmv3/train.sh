@@ -30,7 +30,7 @@ PYTHONPATH="$PWD" python -m torch.distributed.launch \
     --do_train \
     --do_eval \
     --model_name_or_path microsoft/layoutlmv3-base \
-    --output_dir /home/greg/tmp/models/layoutlmv3-base-finetuned \
+    --output_dir /home/gbugaj/tmp/models/layoutlmv3-base-finetuned \
     --segment_level_layout 1 --visual_embed 1 --input_size 224 \
     --max_steps 10000 \
     --save_steps 500 \
