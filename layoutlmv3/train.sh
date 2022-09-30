@@ -24,8 +24,12 @@ export MAX_JOBS=8
     # --fp16
    # /data/models/layoutlmv3-base-finetuned 
 
+# --resume_from_checkpoint /mnt/data/models/layoutlmv3-base-finetuned/checkpoint-1000 \
+    # --resume_from_checkpoint /mnt/data/models/layoutlmv3-base-finetuned-segment_level_layout/checkpoint-500 \
+
+
 PYTHONPATH="$PWD" python -m torch.distributed.launch \
-    --nproc_per_node=1 --master_port 4398 examples/run_funsd.py \
+    --nproc_per_node=2 --master_port 4398 examples/run_funsd.py \
     --dataset_name funsd \
     --do_train \
     --do_eval \
@@ -35,11 +39,15 @@ PYTHONPATH="$PWD" python -m torch.distributed.launch \
     --max_steps 10000 \
     --save_steps 500 \
     --evaluation_strategy steps \
-    --eval_steps 500 \
+    --eval_steps 100 \
+    --logging_steps 10 \
     --learning_rate 1e-5 \
-    --per_device_train_batch_size 4 \
+    --per_device_train_batch_size 8 \
     --gradient_accumulation_steps 1 \
-    --return_entity_level_metrics true \
+    --return_entity_level_metrics false \
     --dataloader_num_workers 8 \
     --cache_dir /tmp/cache/ \
+    --preprocessing_num_workers 8 \
+    --overwrite_output_dir \
+    --pad_to_max_length true \
     --fp16

@@ -48,17 +48,6 @@ from torchvision import transforms
 import torch
 
 
-# we need to define custom features for `set_format` (used later on) to work properly
-featuresXXX = Features({
-    'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
-    'input_ids': Sequence(feature=Value(dtype='int64')),
-    'attention_mask': Sequence(Value(dtype='int64')),
-    'bbox': Array2D(dtype="int64", shape=(512, 4)),
-    'labels': Sequence(feature=Value(dtype='int64')),
-})
-
-
-
 @dataclass
 class ModelArguments:
     """
@@ -243,7 +232,6 @@ def main():
         features = datasets["test"].features
 
 
-    print(features)
     text_column_name = "words" if "words" in column_names else "tokens"
 
     label_column_name = (
@@ -284,6 +272,8 @@ def main():
         revision=model_args.model_revision,
         input_size=data_args.input_size,
         use_auth_token=True if model_args.use_auth_token else None,
+        # hidden_dropout_prob = .3,
+        # attention_probs_dropout_prob = .2,
     )
 
     # AutoTokenizer
@@ -296,6 +286,7 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
+
     model = LayoutLMv3ForTokenClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
@@ -305,15 +296,12 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
-    # feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
-    feature_extractor = LayoutLMv3FeatureExtractor(size=40, apply_ocr=False)
-    # tokenizer = LayoutLMv2TokenizerFast.from_pretrained(
-    #     "microsoft/layoutlmv2-large-uncased")  # microsoft/layoutlmv2-base-uncased
-    processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
+    # feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False)
+    # tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base")  # microsoft/layoutlmv2-base-uncased
+    # processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
-    print(config)
-    print(tokenizer)
-    print(model)
+    # print(config)
+    # print(tokenizer)
     
     # Tokenizer check: this script requires a fast tokenizer.
     if not isinstance(tokenizer, PreTrainedTokenizerFast):
@@ -347,14 +335,19 @@ def main():
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples, augmentation=False):
-        print("TEST")
+        words = examples[text_column_name]
+        boxes = examples[boxes_column_name]
+        word_labels = examples[label_column_name]
+
         tokenized_inputs = tokenizer(
-            examples[text_column_name],
+            words,
+            boxes=boxes, 
+            word_labels=word_labels,
             padding=False,
             truncation=True,
             return_overflowing_tokens=True,
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
-            is_split_into_words=False,
+            # is_split_into_words=True, TODO : This is not working, possible bug in Tokenizer
         )
 
         labels = []
@@ -403,6 +396,25 @@ def main():
 
         return tokenized_inputs
 
+    data_args.preprocessing_num_workers = 8
+
+    image_column_name = "image"
+    text_column_name = "tokens"
+    boxes_column_name = "bboxes"
+    label_column_name = "ner_tags"
+
+    def prepare_examples(examples):
+        images = examples[image_column_name]
+        # images = [Image.open(path).convert("RGB") for path in examples['image_path']]
+        words = examples[text_column_name]
+        boxes = examples[boxes_column_name]
+        word_labels = examples[label_column_name]
+
+        encoding = processor(images, words, boxes=boxes, word_labels=word_labels,
+                            truncation=True, padding="max_length")
+
+        return encoding
+
     if training_args.do_train:
         if "train" not in datasets:
             raise ValueError("--do_train requires a train dataset")
@@ -410,41 +422,20 @@ def main():
         if data_args.max_train_samples is not None:
             train_dataset = train_dataset.select(range(data_args.max_train_samples))
 
-        image_column_name = "image"
-        text_column_name = "tokens"
-        boxes_column_name = "bboxes"
-        label_column_name = "ner_tags"
 
-        def prepare_examples(examples):
-            # images = examples[image_column_name]
-            images = [Image.open(path).convert("RGB") for path in examples['image_path']]
-            words = examples[text_column_name]
-            boxes = examples[boxes_column_name]
-            word_labels = examples[label_column_name]
+        if False:
+            train_dataset = train_dataset.map(prepare_examples, batched=True, remove_columns=train_dataset.column_names,
+                                          features=features, num_proc=data_args.preprocessing_num_workers, 
+                                           load_from_cache_file=not data_args.overwrite_cache)
 
-            encoding = processor(images, words, boxes=boxes, word_labels=word_labels,
-                                truncation=True, padding="max_length")
-
-            return encoding
-
-
-        train_dataset = train_dataset.map(prepare_examples, batched=True, remove_columns=train_dataset.column_names,
-                                          features=features, num_proc=data_args.preprocessing_num_workers)
-
-        train_dataset = train_dataset.map(
-            prepare_examples,
-            batched=True,
-            remove_columns=train_dataset.column_names,
-            features=features,
-        )
-    #
-    # train_dataset = train_dataset.map(
-    #     tokenize_and_align_labels,
-    #     batched=True,
-    #     remove_columns=remove_columns,
-    #     num_proc=data_args.preprocessing_num_workers,
-    #     load_from_cache_file=not data_args.overwrite_cache,
-    # )
+        if True:
+            train_dataset = train_dataset.map(
+                tokenize_and_align_labels,
+                batched=True,
+                remove_columns=remove_columns,
+                num_proc=data_args.preprocessing_num_workers,
+                load_from_cache_file=not data_args.overwrite_cache,
+            )
 
     if training_args.do_eval:
         validation_name = "test"
@@ -453,13 +444,20 @@ def main():
         eval_dataset = datasets[validation_name]
         if data_args.max_val_samples is not None:
             eval_dataset = eval_dataset.select(range(data_args.max_val_samples))
-        eval_dataset = eval_dataset.map(
-            tokenize_and_align_labels,
-            batched=True,
-            remove_columns=remove_columns,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
-        )
+
+        if False:
+            eval_dataset = eval_dataset.map(prepare_examples, batched=True, remove_columns=remove_columns,
+                                        features=features, num_proc=data_args.preprocessing_num_workers, 
+                                        load_from_cache_file=not data_args.overwrite_cache)
+
+        if True:
+            eval_dataset = eval_dataset.map(
+                tokenize_and_align_labels,
+                batched=True,
+                remove_columns=remove_columns,
+                num_proc=data_args.preprocessing_num_workers,
+                load_from_cache_file=not data_args.overwrite_cache,
+            )
 
     if training_args.do_predict:
         if "test" not in datasets:
@@ -467,6 +465,8 @@ def main():
         test_dataset = datasets["test"]
         if data_args.max_test_samples is not None:
             test_dataset = test_dataset.select(range(data_args.max_test_samples))
+
+            
         test_dataset = test_dataset.map(
             tokenize_and_align_labels,
             batched=True,
@@ -589,6 +589,7 @@ def _mp_fn(index):
 
 if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
-    os.environ['TRANSFORMERS_CACHE'] = '/tmp/cache/'
+    os.environ['TRANSFORMERS_CACHE'] = '/data/cache/'
     print(transformers.__version__)
+    
     main()

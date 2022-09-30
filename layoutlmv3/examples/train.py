@@ -4,14 +4,13 @@ import random
 import numpy as np
 import torch
 import transformers
-from torch.nn import DataParallel
 from PIL import Image, ImageDraw, ImageFont
 
 from torch.utils.data import DataLoader
 from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3Processor, AdamW
 
 from transformers import LayoutLMv3Processor, LayoutLMv3FeatureExtractor, LayoutLMv3ForTokenClassification, \
-    LayoutLMv3TokenizerFast
+    LayoutLMv3TokenizerFast,    AutoConfig
 
 
 from tqdm import tqdm
@@ -36,6 +35,9 @@ from transformers import AutoModelForTokenClassification
 from transformers import LayoutLMv3ForTokenClassification
 
 from transformers import TrainingArguments, Trainer
+from transformers import TrainingArguments
+# from layoutlmft.trainers import FunsdTrainer as Trainer
+
 from transformers.data.data_collator import default_data_collator
 
 
@@ -48,9 +50,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parall
 # os.environ['TRANSFORMERS_CACHE'] = '/tmp/cache/'
 print(transformers.__version__)
 
-
-# cache_dir, data_dir
-# dataset = load_dataset("nielsr/funsd")
 dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/mnt/data/cache")
 
 # print(dataset['train'].features)
@@ -79,11 +78,27 @@ if False:
 # we'll use the Auto API here - it will load LayoutLMv3Processor behind the scenes,
 # based on the checkpoint we provide from the hub
 # processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
-# processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
 
-# Max model size is 512, so we will need to handle any documents larger thjan ath
-feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False)
-tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base")
+model_name_or_path = "microsoft/layoutlmv3-large"
+
+config = AutoConfig.from_pretrained (
+    model_name_or_path,
+    num_labels=len(labels),
+    finetuning_task="ner",
+    cache_dir="/mnt/data/cache",
+    input_size=224,
+    hidden_dropout_prob = .2,
+    attention_probs_dropout_prob = .2,
+    has_relative_attention_bias=False
+)
+
+# config.hidden_dropout_prob = 0.2
+# config.attention_probs_dropout_prob = 0.1
+
+
+# Max model size is 512, so we will need to handle any documents larger thank that
+feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False, do_resize=True, resample=Image.LANCZOS)
+tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-large")
 processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
 features = dataset["train"].features
@@ -112,11 +127,12 @@ else:
     label_list = get_label_list(dataset["train"][label_column_name])
     id2label = {k: v for k,v in enumerate(label_list)}
     label2id = {v: k for k,v in enumerate(label_list)}
+    
 num_labels = len(label_list)
 
 
-print(label_list)
-print(id2label)
+# print(label_list)
+# print(id2label)
 
 def prepare_examples(examples):
   images = examples[image_column_name]
@@ -124,7 +140,7 @@ def prepare_examples(examples):
   boxes = examples[boxes_column_name]
   word_labels = examples[label_column_name]
 
-  encoding = processor(images, words, boxes=boxes, word_labels=word_labels,truncation=True,  padding="max_length")
+  encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True,  padding="max_length")
   return encoding
 
 # we need to define custom features for `set_format` (used later on) to work properly
@@ -137,15 +153,15 @@ features = Features({
 })
 
 # We
-dataset['train'] = dataset['train'].shuffle(seed=42)
-dataset['test'] = dataset['test'].shuffle(seed=42)
+# dataset['train'] = dataset['train'].shuffle(seed=42)
+# dataset['test'] = dataset['test'].shuffle(seed=42)
 
 train_dataset = dataset["train"].map(
     prepare_examples,
     batched=True,
     remove_columns=column_names,
     features=features,
-    num_proc = 8
+    num_proc = 4
 )
 
 eval_dataset = dataset["test"].map(
@@ -153,12 +169,8 @@ eval_dataset = dataset["test"].map(
     batched=True,
     remove_columns=column_names,
     features=features,
-    num_proc = 8
+    num_proc = 4
 )
-
-
-# dataset['train'] = dataset['train'][:10]
-# dataset['test']  = dataset['test'][:10]
 
 
 example = train_dataset[0]
@@ -170,11 +182,9 @@ example = train_dataset[0]
 for k,v in example.items():
     print(k,v.shape)
 
-for id, label in zip(train_dataset[0]["input_ids"], train_dataset[0]["labels"]):
-  print(processor.tokenizer.decode([id]), label.item())
+# for id, label in zip(train_dataset[0]["input_ids"], train_dataset[0]["labels"]):
+#   print(processor.tokenizer.decode([id]), label.item())
 
-
-import numpy as np
 
 return_entity_level_metrics = False
 metric = load_metric("seqeval")
@@ -214,26 +224,31 @@ def compute_metrics(p):
 
 
 # Define the model
+model = LayoutLMv3ForTokenClassification.from_pretrained(
+    model_name_or_path,
+    config=config,
 
-
-model = LayoutLMv3ForTokenClassification.from_pretrained("microsoft/layoutlmv3-base",
-                                                         id2label=id2label,
-                                                         label2id=label2id)
+    # id2label=id2label,
+    # label2id=label2id
+)
 
 training_args = TrainingArguments(
-                                  max_steps=50000,
-                                  save_steps = 2000,
-                                  per_device_train_batch_size=8,
-                                  per_device_eval_batch_size=2,
-                                  learning_rate=1e-5,
-                                  evaluation_strategy="steps",
-                                  eval_steps=2000,
-                                  load_best_model_at_end=True,
-                                  metric_for_best_model="f1",
-                                  output_dir="/mnt/data/models/layoutlmv3-base-finetuned-funsd",
-                                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000",
-                                  fp16=True
-                                )
+                  max_steps=10000,
+                  save_steps = 1000,
+                  per_device_train_batch_size=4,
+                  per_device_eval_batch_size=1,
+                  learning_rate=5e-5,
+                  evaluation_strategy="steps",
+                  eval_steps=1000,
+                  load_best_model_at_end=True,
+                  metric_for_best_model="f1",
+                  output_dir="/mnt/data/models/layoutlmv3-large-fullyannotated",
+                  # resume_from_checkpoint="/mnt/data/models/layoutlmv3-large-finetuned-small-100/checkpoint-750",
+                  fp16=True,
+                )
+
+print('training_args *************************')
+print(training_args)
 
 # Initialize our Trainer
 trainer = Trainer(
@@ -246,7 +261,7 @@ trainer = Trainer(
     compute_metrics=compute_metrics,
 )
 
-if False:
+if True:
     # checkpoint = last_checkpoint if last_checkpoint else None
     train_result = trainer.train()
 
@@ -268,24 +283,10 @@ if False:
 # TODO : how to handle this:
 # Token indices sequence length is longer than the specified maximum sequence length for this model (541 > 512). Running this sequence through the model will result in indexing errors
 
+os.exit()
 # Inference
-model_name_or_path = "/mnt/data/models/layoutlmv3-base-finetuned-funsd/checkpoint-50000"
-# model = AutoModelForTokenClassification.from_pretrained(model_name_or_path, ignore_mismatched_sizes=True)
+model_name_or_path = "/mnt/data/models/layoutlmv3-large-finetuned-funsd/checkpoint-5000"
 model = AutoModelForTokenClassification.from_pretrained(model_name_or_path)
-
-# # AutoTokenizer
-# tokenizer = AutoTokenizer.from_pretrained(
-#     model_name_or_path,
-#     use_fast=True,
-#     add_prefix_space=True,
-# )
-# model = LayoutLMv3ForTokenClassification.from_pretrained(
-#     model_name_or_path,
-# )
-
-# # feature_extractor = LayoutLMv2FeatureExtractor(size = 672, apply_ocr=False)
-# feature_extractor = LayoutLMv3FeatureExtractor(size=40, apply_ocr=False)
-# processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
 
 # example = dataset["test"][random.randint(0, len(dataset["test"]))]
@@ -413,5 +414,24 @@ image.save("/tmp/tensors/real.png")
 # docker stop $(docker ps -q) && docker rm $(docker ps --filter status=exited -q)
 # cd ~/dev/marie-ai/docker-util && ./run-all.sh
 
-
-# 005 006 008 009 001 002 003 004 005 006 008 010 013 014 015 016
+#
+#
+# Loading best model from /mnt/data/models/layoutlmv3-large-finetuned-small/checkpoint-4500 (score: 0.9116538131962296).
+# {'train_runtime': 2593.4786, 'train_samples_per_second': 7.712, 'train_steps_per_second': 1.928, 'train_loss': 0.06096109193563461, 'epoch': 18.73}
+# 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5000/5000 [43:13<00:00,  1.93it/s]
+# Saving model checkpoint to /mnt/data/models/layoutlmv3-large-finetuned-small
+# Configuration saved in /mnt/data/models/layoutlmv3-large-finetuned-small/config.json
+# Model weights saved in /mnt/data/models/layoutlmv3-large-finetuned-small/pytorch_model.bin
+# Feature extractor saved in /mnt/data/models/layoutlmv3-large-finetuned-small/preprocessor_config.json
+# tokenizer config file saved in /mnt/data/models/layoutlmv3-large-finetuned-small/tokenizer_config.json
+# Special tokens file saved in /mnt/data/models/layoutlmv3-large-finetuned-small/special_tokens_map.json
+# ***** train metrics *****
+#   epoch                    =      18.73
+#   train_loss               =      0.061
+#   train_runtime            = 0:43:13.47
+#   train_samples            =       1065
+#   train_samples_per_second =      7.712
+#   train_steps_per_second   =      1.928
+# ***** Running Evaluation *****
+#   Num examples = 400
+#   Batch size = 1
