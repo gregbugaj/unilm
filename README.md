@@ -1,13 +1,18 @@
 <!--# Large-scale Self-supervised Pre-training Across Tasks, Languages, and Modalities-->
+## [aka.ms/gpfm](https://aka.ms/gpfm)
 # Hiring
-We are hiring at all levels (including FTE researchers and interns)! If you are interested in working with us on NLP and large-scale pre-trained models, please send your resume to <a href="mailto:fuwei@microsoft.com" class="x-hidden-focus">fuwei@microsoft.com</a>.
+We are hiring at all levels (including FTE researchers and interns)! If you are interested in working with us on Foundation Models (aka large-scale pre-trained models) and AGI, NLP, MT, Speech, Document AI and Multimodal AI, please send your resume to <a href="mailto:fuwei@microsoft.com" class="x-hidden-focus">fuwei@microsoft.com</a>.
 
 ## AI Fundamentals
-### Foundation of Large Models
-**Transformers at Scale** = DeepNet + X-MoE
+### OpenScale - Transformers at (any) Scale
+
+Fundamental research to improve modeling generality and capability, as well as training stability and efficiency of scaling Transformers at any scale.
+
 > Stability - [**DeepNet**](https://github.com/microsoft/unilm/tree/master/deepnet): scaling Transformers to 1,000 Layers and beyond
 
->Efficiency & Transferability - [**X-MoE**](https://github.com/microsoft/unilm/tree/master/xmoe): scalable & finetunable sparse Mixture-of-Experts (MoE)
+> Generality: [**Foundation Transformers (Magneto)**](https://arxiv.org/abs/2210.06423)
+
+> Efficiency & Transferability - [**X-MoE**](https://github.com/microsoft/unilm/tree/master/xmoe): scalable & finetunable sparse Mixture-of-Experts (MoE)
 
 ## Foundation (aka Pre-trained) Models
 
@@ -33,7 +38,7 @@ We are hiring at all levels (including FTE researchers and interns)! If you are 
 
 > [**EdgeLM**](https://github.com/microsoft/unilm/tree/master/edgelm)(```NEW```): small pre-trained models on edge/client devices
 
-> [**SimLM**](https://github.com/microsoft/unilm/tree/master/simlm) (```NEW```): similarity matching with language model pre-training
+> [**SimLM**](https://github.com/microsoft/unilm/tree/master/simlm) (```NEW```): large-scale pre-training for similarity matching
 
 ### Vision
 > [**BEiT**](https://github.com/microsoft/unilm/tree/master/beit)/[**BEiT-2**](https://github.com/microsoft/unilm/tree/master/beit2): generative self-supervised pre-training for vision / BERT Pre-Training of Image Transformers
@@ -44,17 +49,21 @@ We are hiring at all levels (including FTE researchers and interns)! If you are 
 > [**WavLM**](https://github.com/microsoft/unilm/tree/master/wavlm): speech pre-training for full stack tasks
 
 ### Multimodal (X + Language)
-> [**LayoutLM**](https://github.com/microsoft/unilm/tree/master/layoutlm)/[**LayoutLMv2**](https://github.com/microsoft/unilm/tree/master/layoutlmv2)/[**LayoutLMv3**](https://github.com/microsoft/unilm/tree/master/layoutlmv3): multimodal (text + layout/format + image) pre-training for [Document AI](https://www.microsoft.com/en-us/research/project/document-ai/) (e.g. scanned documents, PDF, etc.)
+> [**LayoutLM**](https://github.com/microsoft/unilm/tree/master/layoutlm)/[**LayoutLMv2**](https://github.com/microsoft/unilm/tree/master/layoutlmv2)/[**LayoutLMv3**](https://github.com/microsoft/unilm/tree/master/layoutlmv3): multimodal (text + layout/format + image) **Document Foundation Model** for [Document AI](https://www.microsoft.com/en-us/research/project/document-ai/) (e.g. scanned documents, PDF, etc.)
 
-> [**LayoutXLM**](https://github.com/microsoft/unilm/tree/master/layoutxlm): multimodal (text + layout/format + image) pre-training for multilingual document understanding
+> [**LayoutXLM**](https://github.com/microsoft/unilm/tree/master/layoutxlm): multimodal (text + layout/format + image) **Document Foundation Model** for multilingual Document AI
 
 > [**MarkupLM**](https://github.com/microsoft/unilm/tree/master/markuplm): markup language model pre-training for visually-rich document understanding
+
+> [**XDoc**](https://github.com/microsoft/unilm/tree/master/xdoc): unified pre-training for cross-format document understanding
 
 > [**UniSpeech**](https://arxiv.org/abs/2101.07597): unified pre-training for self-supervised learning and supervised learning for ASR
 
 > [**UniSpeech-SAT**](https://arxiv.org/pdf/2110.05752.pdf): universal speech representation learning with speaker-aware pre-training
 
 > [**SpeechT5**](https://arxiv.org/abs/2110.07205): encoder-decoder pre-training for spoken language processing
+
+> [**SpeechLM**](https://arxiv.org/abs/2209.15329): Enhanced Speech Pre-Training with Unpaired Textual Data
 
 > [**VLMo**](https://github.com/microsoft/unilm/tree/master/vlmo): Unified vision-language pre-training 
 
@@ -118,6 +127,10 @@ We are hiring at all levels (including FTE researchers and interns)! If you are 
 - September, 2019: [UniLMv1](https://github.com/microsoft/unilm/tree/master/unilm-v1) was accepted by NeurIPS 2019.
 
 ## Release
+
+**\*\*\*\*\* ```New Octorber, 2022```: [XDoc](https://github.com/microsoft/unilm/tree/master/xdoc) release \*\*\*\*\***
+
+- [x] [**XDoc**](https://github.com/microsoft/unilm/tree/master/xdoc) (October 7, 2022): XDoc, a unified pre-trained model which deals with different document formats in a single model. For parameter efficiency, we share backbone parameters for different formats such as the word embedding layer and the Transformer layers. Meanwhile, we introduce adaptive layers with lightweight parameters to enhance the distinction across different formats. Experimental results have demonstrated that with only 36.7% parameters, XDoc achieves comparable or even better performance on a variety of downstream tasks compared with the individual pre-trained models, which is cost effective for real-world deployment. "[XDoc: Unified Pre-training for Cross-Format Document Understanding](https://arxiv.org/abs/2210.02849) ```EMNLP 2022```"
 
 **\*\*\*\*\* ```New May, 2022```: [Aggressive Decoding](https://github.com/microsoft/unilm/tree/master/decoding) release \*\*\*\*\***
 

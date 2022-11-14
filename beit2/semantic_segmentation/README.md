@@ -17,7 +17,7 @@ cd apex
 pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
 ```
 
-3. Follow the guide in [mmseg](https://github.com/open-mmlab/mmsegmentation/blob/master/docs/dataset_prepare.md) to prepare the ADE20k dataset.
+3. Follow the guide in [mmseg](https://github.com/open-mmlab/mmsegmentation/blob/master/docs/en/dataset_prepare.md) to prepare the ADE20k dataset.
 
 
 ## Fine-tuning
@@ -35,7 +35,7 @@ bash tools/dist_train.sh \
     --options model.pretrained=https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ft21k.pth
 ```
 
-Using a BEiT-base backbone with UperNet:
+Using a BEiT-large backbone with UperNet:
 ```bash
 bash tools/dist_train.sh \
     configs/beit/upernet/upernet_beit_large_24_512_slide_160k_21ktoade20k.py 8 \
