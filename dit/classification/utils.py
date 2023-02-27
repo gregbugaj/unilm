@@ -485,7 +485,8 @@ def create_ds_config(args):
         ds_config = {
             "train_batch_size": args.batch_size * args.update_freq * get_world_size(),
             "train_micro_batch_size_per_gpu": args.batch_size,
-            "steps_per_print": 1000,
+            "steps_per_print": 100,
+
             "optimizer": {
                 "type": "Adam",
                 "adam_w_mode": True,
@@ -509,7 +510,20 @@ def create_ds_config(args):
                 "min_loss_scale": 1
             },
             "zero_optimization": {
-                "stage": args.zero_stage
+                "stage": args.zero_stage,
+                "round_robin_gradients": True,
+
+                "offload_optimizer": {
+                    "device": "cpu",
+                    "pin_memory": True
+                },
+
+                "allgather_partitions": True,
+                "allgather_bucket_size": 5e8,
+                "overlap_comm": True,
+                "reduce_scatter": True,
+                "reduce_bucket_size": 5e8,
+                "contiguous_gradients": True
             },
             "amp": {
                 "enabled": False,

@@ -33,9 +33,23 @@ def build_dataset(is_train, args):
     print("---------------------------")
 
     if args.data_set == 'rvlcdip':
+
+        if args.class_names_path is not None:
+            print("Loading class names from %s" % args.class_names_path)
+            with open(args.class_names_path, 'r') as f:
+                classes = [line.strip() for line in f.readlines()]
+                print(classes)
+            print("Number of classes = %d" % len(classes))
+            print("Number of classes = %d" % args.nb_classes)
+
+            assert args.nb_classes == len(classes)
+            args.nb_classes = len(classes)
+        else:
+            class_names = None
+
         root = args.data_path if is_train else args.eval_data_path
         split = "train" if is_train else "test"
-        dataset = RvlcdipImageFolder(root, split=split, transform=transform)
+        dataset = RvlcdipImageFolder(root, split=split, transform=transform, classes=classes)
         nb_classes = args.nb_classes
         assert len(dataset.class_to_idx) == nb_classes
     else:

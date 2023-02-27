@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+         }
+         ,
+        {
+            "name": "Python: Inference",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                // "--image_path", "/home/greg/datasets/dataset/rvlcdip/images/imagesa/a/a/a/aaa06d00/50486482-6482.tif",
+                "--image_path", "/home/greg/datasets/dataset/rvlcdip/images/imagesa/a/y/a",
+                "--class_names_path", "./config/labels.txt",
+                "--model_path", "/tmp/converted.pth",
+            ],
+            "console": "integratedTerminal",
+            // "justMyCode": false
+        }
+    ]
+}
