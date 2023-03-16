@@ -22,6 +22,9 @@ Fundamental research to improve modeling generality and capability, as well as t
 > [**MetaLM**](https://github.com/microsoft/unilm/tree/master/metalm): **Language Models are General-Purpose Interfaces**
 
 
+### LLM / MLLM (Multimodal LLM)
+> [**Kosmos-1**](https://arxiv.org/abs/2302.14045): **A Multimodal Large Language Model (MLLM)**
+
 
 **The Big Convergence** - Large-scale self-supervised pre-training across ```tasks``` (predictive and generative), ```languages``` (100+ languages), and ```modalities``` (language, image, audio, layout/format + language, vision + language, audio + language, etc.)
 
@@ -75,7 +78,7 @@ Fundamental research to improve modeling generality and capability, as well as t
 
 > [**VL-BEiT**](https://github.com/microsoft/unilm/tree/master/vl-beit) (```NEW```): Generative Vision-Language Pre-training - evolution of **BEiT** to multimodal
 
-> [**BEiT-3**](https://github.com/microsoft/unilm/tree/master/beit) (```NEW```): a general-purpose multimodal foundation model, and a major milestone of **The Big Convergence** of Large-scale Pre-training Across Tasks, Languages, and Modalities.
+> [**BEiT-3**](https://github.com/microsoft/unilm/tree/master/beit3) (```NEW```): a general-purpose multimodal foundation model, and a major milestone of **The Big Convergence** of Large-scale Pre-training Across Tasks, Languages, and Modalities.
 ### Toolkits
 > [**s2s-ft**](https://github.com/microsoft/unilm/tree/master/s2s-ft): sequence-to-sequence fine-tuning toolkit
 
@@ -88,15 +91,20 @@ Fundamental research to improve modeling generality and capability, as well as t
 
 > [**XLM-T**](https://github.com/microsoft/unilm/tree/master/xlmt): multilingual NMT w/ pretrained cross-lingual encoders
 
+## Links
+### LLMOps - General technology for enabling AI capabilities w/ LLMs and MLLMs ([repo](https://github.com/microsoft/lmops))
 
 ## News
-- January, 2023: [**VALL-E**](https://arxiv.org/abs/2301.02111)  a language modeling approach for text to speech synthesis (TTS), which achieves state-of-the-art zero-shot TTS performance. See https://aka.ms/valle for demos of our work
+- [Model Release] March, 2023: [**BEiT-3**](https://github.com/microsoft/unilm/tree/master/beit3) pretrained models and code.
+- March, 2023: [**Kosmos-1**](https://arxiv.org/abs/2302.14045) - a Multimodal Large Language Model (MLLM) that can perceive general modalities, learn in context (i.e., few-shot), and follow instructions (i.e., zero-shot).
+- January, 2023: [**VALL-E**](https://arxiv.org/abs/2301.02111) a language modeling approach for text to speech synthesis (TTS), which achieves state-of-the-art zero-shot TTS performance. See https://aka.ms/valle for demos of our work.
+- [Model Release] January, 2023: [**E5**](https://github.com/microsoft/unilm/tree/master/e5) - Text Embeddings by Weakly-Supervised Contrastive Pre-training.
 - November, 2022: [**TorchScale 0.1.1**](https://github.com/microsoft/torchscale) was released!
 - November, 2022: [**TrOCR**](https://arxiv.org/abs/2109.10282) was accepted by AAAI 2023.
 - [Model Release] November, 2022: [**XDoc**](https://github.com/microsoft/unilm/tree/master/xdoc) **BASE** models for cross-format document understanding.
 - [Model Release] September, 2022: [**TrOCR**](https://github.com/microsoft/unilm/tree/master/trocr) **BASE** and **LARGE** models for Scene Text Recognition (STR).
-- [Model Release] September, 2022: [**BEiT v2**](https://github.com/microsoft/unilm/tree/master/beit2) code and pretrained models
-- August, 2022: [**BEiT-3**](https://arxiv.org/abs/2208.10442)- a general-purpose multimodal foundation model, which achieves state-of-the-art transfer performance on both vision and vision-language tasks
+- [Model Release] September, 2022: [**BEiT v2**](https://github.com/microsoft/unilm/tree/master/beit2) code and pretrained models.
+- August, 2022: [**BEiT-3**](https://arxiv.org/abs/2208.10442) - a general-purpose multimodal foundation model, which achieves state-of-the-art transfer performance on both vision and vision-language tasks
 - July, 2022: [**SimLM**](https://github.com/microsoft/unilm/tree/master/simlm) - Large-scale self-supervised pre-training for similarity matching
 - June, 2022: [**DiT**](https://arxiv.org/abs/2203.02378) and [**LayoutLMv3**](https://arxiv.org/abs/2204.08387) were accepted by ACM Multimedia 2022.
 - June, 2022: [**MetaLM**](https://github.com/microsoft/unilm/tree/master/metalm) - Language models are general-purpose interfaces to foudation models (language/multilingual, vision, speech, and multimodal)
@@ -136,6 +144,7 @@ Fundamental research to improve modeling generality and capability, as well as t
 - April 5, 2020: [**Multilingual MiniLM**](https://github.com/microsoft/unilm/tree/master/minilm) released!
 - September, 2019: [UniLMv1](https://github.com/microsoft/unilm/tree/master/unilm-v1) was accepted by NeurIPS 2019.
 
+<!--
 ## Release
 
 **\*\*\*\*\* ```New October, 2022```: [XDoc](https://github.com/microsoft/unilm/tree/master/xdoc) release \*\*\*\*\***
@@ -209,6 +218,8 @@ WavLM integrates the gated relative position embedding structure and the utteran
 **\*\*\*\*\* October 1st, 2019: UniLM v1 release \*\*\*\*\***
 
 - [x] [**UniLM v1**](https://github.com/microsoft/unilm/tree/master/unilm-v1) (September 30, 2019): the code and pre-trained models for the ```NeurIPS 2019``` paper entitled "[Unified Language Model Pre-training for Natural Language Understanding and Generation](https://arxiv.org/abs/1905.03197)". UniLM (v1) achieves the **new SOTA results** in **NLG** (especially **sequence-to-sequence generation**) tasks, including abstractive summarization (the Gigaword and CNN/DM datasets), question generation (the SQuAD QG dataset), etc. 
+
+-->
 
 ## License
 This project is licensed under the license found in the LICENSE file in the root directory of this source tree.
