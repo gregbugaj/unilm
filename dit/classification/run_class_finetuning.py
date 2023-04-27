@@ -146,6 +146,9 @@ def get_args():
                         help='dataset path for evaluation')
     parser.add_argument('--nb_classes', default=0, type=int,
                         help='number of the classification types')
+    
+    parser.add_argument("--class_names_path", type=str, default="./config/labels.txt")
+
     parser.add_argument('--imagenet_default_mean_and_std', default=False, action='store_true')
 
     parser.add_argument('--data_set', default='IMNET', choices=['CIFAR', 'IMNET', 'image_folder', "rvlcdip", "rvlcdip_wds"],
@@ -219,7 +222,7 @@ def main(args, ds_init):
     device = torch.device(args.device)
 
     # fix the seed for reproducibility
-    seed = args.seed + utils.get_rank()
+    seed = 12345 # args.seed + utils.get_rank()
     torch.manual_seed(seed)
     np.random.seed(seed)
     # random.seed(seed)
@@ -263,6 +266,7 @@ def main(args, ds_init):
         log_writer = None
 
     dataset_size_train = len(dataset_train)
+
     if isinstance(dataset_train, torch.utils.data.IterableDataset):
         dataset_train = dataset_train.batched(args.batch_size, partial=False)
         data_loader_train = wds.WebLoader(
@@ -426,9 +430,15 @@ def main(args, ds_init):
                     new_rel_pos_bias = torch.cat((rel_pos_bias, extra_tokens), dim=0)
                     checkpoint_model[key] = new_rel_pos_bias
 
+        print(checkpoint_model.keys())
+        print(model.pos_embed)
+        # os.exit(0)
         # interpolate position embedding
         if 'pos_embed' in checkpoint_model:
             pos_embed_checkpoint = checkpoint_model['pos_embed']
+
+            print(pos_embed_checkpoint)
+            print(pos_embed_checkpoint.shape)
             embedding_size = pos_embed_checkpoint.shape[-1]
             num_patches = model.patch_embed.num_patches
             num_extra_tokens = model.pos_embed.shape[-2] - num_patches
@@ -609,7 +619,54 @@ def main(args, ds_init):
 
 
 if __name__ == '__main__':
+    # Attempt to prevent error for  num_workers  > 0
+    # multiprocessing/resource_sharer.py _serve OSError: [Errno 9] Bad file descriptor
+    import torch.multiprocessing
+    torch.multiprocessing.set_sharing_strategy('file_system')
+
     opts, ds_init = get_args()
-    if opts.output_dir:
-        Path(opts.output_dir).mkdir(parents=True, exist_ok=True)
-    main(opts, ds_init)
+
+    # For debugging purposes
+    if False:
+        opts.model = "deit_base_patch16_224" 
+        opts.data_path = "/home/greg/datasets/dataset/rvlcdip" 
+        opts.eval_data_path  = "/home/greg/datasets/dataset/rvlcdip" 
+        opts.nb_classes =  16 
+        opts.no_pin_mem = True
+        opts.data_set =  "rvlcdip"
+        opts.output_dir  =  "output_dir"
+        opts.log_dir  = "output_dir/tf"
+        opts.batch_size  = 64
+        opts.abs_pos_emb  = True
+        opts.disable_rel_pos_bias  = True
+        opts.num_workers  = 1
+        opts.finetune  = "/home/greg/dev/models/dit/dit-base-224-p16-500k-62d53a.pth"
+
+    # os.exit()
+
+    print(opts)
+
+        # For debugging purposes
+    if True:
+        opts.model = "deit_base_patch16_224" 
+        opts.data_path = "/home/greg/datasets/dataset/data-hipa/medical_page_classification/output" 
+        opts.eval_data_path  = "/home/greg/datasets/dataset/data-hipa/medical_page_classification/output" 
+        opts.class_names_path  = "/home/greg/datasets/dataset/data-hipa/medical_page_classification/output/labels/labels.txt" 
+        opts.nb_classes = 12
+        opts.no_pin_mem = True
+        opts.data_set =  "rvlcdip"
+        opts.output_dir  =  "output_dir_pages"
+        opts.log_dir  = "output_dir_pages/tf"
+        opts.batch_size  = 48
+        opts.abs_pos_emb  = True
+        opts.disable_rel_pos_bias  = True
+        opts.num_workers  = 4
+        opts.epochs = 500
+        # opts.finetune  = "/home/greg/dev/models/dit/dit-base-224-p16-500k-62d53a.pth"
+        # opts.finetune  = "/home/greg/dev/unilm/dit/classification/output_dir_pages/checkpoint-best.pth"
+
+    if True:
+        if opts.output_dir:
+            Path(opts.output_dir).mkdir(parents=True, exist_ok=True)
+
+        main(opts, ds_init)

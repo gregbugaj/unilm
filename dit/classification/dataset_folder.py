@@ -214,29 +214,35 @@ class RvlcdipDatasetFolder(VisionDataset):
             transform: Optional[Callable] = None,
             target_transform: Optional[Callable] = None,
             split: str = None,
-            dataset_size: Optional[int] = None
+            dataset_size: Optional[int] = None,
+            classes: Optional[List[str]] = None,
     ) -> None:
         super().__init__(root, transform=transform, target_transform=target_transform)
         self.dataset_size = int(dataset_size) if dataset_size is not None else 42948004
-        classes = ["letter",
-                   "form",
-                   "email",
-                   "handwritten",
-                   "advertisement",
-                   "scientific report",
-                   "scientific publication",
-                   "specification",
-                   "file folder",
-                   "news article",
-                   "budget",
-                   "invoice",
-                   "presentation",
-                   "questionnaire",
-                   "resume",
-                   "memo"]
+
+        if classes is None:
+            print("Using predefined classes...")
+            classes = ["letter",
+                    "form",
+                    "email",
+                    "handwritten",
+                    "advertisement",
+                    "scientific report",
+                    "scientific publication",
+                    "specification",
+                    "file folder",
+                    "news article",
+                    "budget",
+                    "invoice",
+                    "presentation",
+                    "questionnaire",
+                    "resume",
+                    "memo"]
         class_to_idx = {c: i for i, c in enumerate(classes)}
         with open(os.path.join(self.root, "labels", split + ".txt"), "r") as f:
             labels = f.read().splitlines()
+            
+            # labels = list(filter(lambda line : not line.startswith('#'), labels))
             samples = [(line.split()[0], int(line.split()[1])) for line in labels]
         try:
             assert len(samples) > 0 and os.path.exists(os.path.join(self.root, "images", samples[0][0]))
@@ -288,11 +294,13 @@ class RvlcdipImageFolder(RvlcdipDatasetFolder):
             target_transform: Optional[Callable] = None,
             loader: Callable[[str], Any] = default_loader,
             split: str = None,
-            dataset_size: Optional[int] = None
+            dataset_size: Optional[int] = None,
+            classes: Optional[List[str]] = None,
     ):
         super().__init__(root, loader, IMG_EXTENSIONS if split is None else None,
                                               transform=transform,
                                               target_transform=target_transform,
                                               split=split,
-                                              dataset_size=dataset_size)
+                                              dataset_size=dataset_size, classes = classes)
         self.imgs = self.samples
+
