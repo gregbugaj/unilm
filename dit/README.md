@@ -22,6 +22,9 @@ Download checkpoints that are **self-supervised pretrained** on IIT-CDIP Test Co
 - DiT-base: [dit_base_patch16_224](https://layoutlm.blob.core.windows.net/dit/dit-pts/dit-base-224-p16-500k-62d53a.pth)
 - DiT-large: [dit_large_patch16_224](https://layoutlm.blob.core.windows.net/dit/dit-pts/dit-large-224-p16-500k-d7a2fb.pth)
 
+**If any file on this page fails to download, please add the following string as a suffix to the URL.**
+
+**Suffix String:** ?sv=2022-11-02&ss=b&srt=o&sp=r&se=2033-06-08T16:48:15Z&st=2023-06-08T08:48:15Z&spr=https&sig=a9VXrihTzbWyVfaIDlIT1Z0FoR1073VB0RLQUMuudD4%3D
 
 ## Setup
 
@@ -122,11 +125,6 @@ If you find this repository useful, please consider citing our work:
 ## Acknowledgement
 
 This repository is built using the [timm](https://github.com/rwightman/pytorch-image-models) library, the [detectron2](https://github.com/facebookresearch/detectron2) library, the [DeiT](https://github.com/facebookresearch/deit) repository, the [Dino](https://github.com/facebookresearch/dino) repository, the [BEiT](https://github.com/microsoft/unilm/tree/master/beit) repository and the [MPViT](https://github.com/youngwanLEE/MPViT) repository.
-
-
-## License
-
-The content of this project itself is licensed under the [Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)，[Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct)
 
 
 ### Contact Information
