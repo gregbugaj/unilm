@@ -74,7 +74,7 @@ def main(args):
     result_image = result.get_image()[:, :, ::-1]
 
     # # step 6: save
-    cv2.imwrite("/tmp/dit-result.png", result_image)
+    cv2.imwrite("/tmp/dit/result.png", result_image)
     # cv2.imwrite(args.output_file_name, result_image)
 
 
