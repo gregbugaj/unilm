@@ -1,12 +1,12 @@
 <!--# Large-scale Self-supervised Pre-training Across Tasks, Languages, and Modalities-->
-## [aka.ms/nlpagi](https://aka.ms/nlpagi)
+## [aka.ms/GeneralAI](https://aka.ms/GeneralAI)
 # Hiring
 We are hiring at all levels (including FTE researchers and interns)! If you are interested in working with us on Foundation Models (aka large-scale pre-trained models) and AGI, NLP, MT, Speech, Document AI and Multimodal AI, please send your resume to <a href="mailto:fuwei@microsoft.com" class="x-hidden-focus">fuwei@microsoft.com</a>.
 
-## AGI Fundamentals
+## Foundation Architecture
 ### TorchScale - Transformers at (any) Scale ([repo](https://github.com/microsoft/torchscale))
 
-Fundamental research to improve modeling generality and capability, as well as training stability and efficiency for Transformers at any scale.
+Fundamental research to develop new architectures for foundation models and A(G)I, focusing on modeling generality and capability, as well as training stability and efficiency.
 
 > Stability - [**DeepNet**](https://github.com/microsoft/unilm/tree/master/deepnet): scaling Transformers to 1,000 Layers and beyond
 
@@ -96,7 +96,8 @@ Fundamental research to improve modeling generality and capability, as well as t
 > [**XLM-T**](https://github.com/microsoft/unilm/tree/master/xlmt): multilingual NMT w/ pretrained cross-lingual encoders
 
 ## Links
-### LLMOps - General technology for enabling AI capabilities w/ LLMs and MLLMs ([repo](https://github.com/microsoft/lmops))
+### LLMOps ([repo](https://github.com/microsoft/lmops))
+General technology for enabling AI capabilities w/ LLMs and MLLMs.
 
 ## News
 - [Model Release] May, 2023: [**TextDiffuser**](https://github.com/microsoft/unilm/tree/master/textdiffuser) models and code.
