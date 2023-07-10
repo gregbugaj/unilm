@@ -98,7 +98,7 @@ config = AutoConfig.from_pretrained (
 
 # Max model size is 512, so we will need to handle any documents larger thank that
 feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False, do_resize=True, resample=Image.LANCZOS)
-tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-large")
+tokenizer = LayoutLMv3TokenizerFast.from_pretrained(model_name_or_path)
 processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
 features = dataset["train"].features
@@ -227,9 +227,6 @@ def compute_metrics(p):
 model = LayoutLMv3ForTokenClassification.from_pretrained(
     model_name_or_path,
     config=config,
-
-    # id2label=id2label,
-    # label2id=label2id
 )
 
 training_args = TrainingArguments(
@@ -407,12 +404,6 @@ for word, box, label in zip(example['tokens'], example['bboxes'], example['ner_t
 
 image.save("/tmp/tensors/real.png")
 
-#
-# sudo mount /mnt/data/marie-ai && docker restart $(docker ps -q)
-# sudo sh -c "truncate -s 0 /var/lib/docker/containers/*/*-json.log"
-# docker stop $(docker ps -q)
-# docker stop $(docker ps -q) && docker rm $(docker ps --filter status=exited -q)
-# cd ~/dev/marie-ai/docker-util && ./run-all.sh
 
 #
 #
@@ -435,3 +426,5 @@ image.save("/tmp/tensors/real.png")
 # ***** Running Evaluation *****
 #   Num examples = 400
 #   Batch size = 1
+
+
