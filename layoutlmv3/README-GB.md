@@ -245,3 +245,11 @@ LARGE
   eval_samples                        =       6163
   eval_samples_per_second             =    123.326
   eval_steps_per_second               =      7.724
+
+
+
+# Reference 
+
+[Max_seq_length LayoutLMV3 - How to implement it ? #942](https://github.com/microsoft/unilm/issues/942)
+ 
+[LayoutLMV3 Training with Morethan 512 tokens. #19190](https://github.com/huggingface/transformers/issues/19190#issuecomment-1441883471)
