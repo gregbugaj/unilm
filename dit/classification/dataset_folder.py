@@ -242,6 +242,13 @@ class RvlcdipDatasetFolder(VisionDataset):
         with open(os.path.join(self.root, "labels", split + ".txt"), "r") as f:
             labels = f.read().splitlines()
             
+            # filter to remove lines like : CORRESPONDENCE/174617254_2 - Copy.tiff 6
+            labels = list(filter(lambda line : len(line.split()) < 3, labels))
+
+            for line in labels:
+                print (line)
+            print("(((((((((((((((((((((((())))))))))))))))))))))))")
+            
             # labels = list(filter(lambda line : not line.startswith('#'), labels))
             samples = [(line.split()[0], int(line.split()[1])) for line in labels]
         try:

@@ -4,7 +4,7 @@
 
 
 ```bash
-python ./converter.py --source_dir /home/greg/datasets/dataset/data-hipa/medical_page_classification/raw --output_dir /home/greg/datasets/dataset/data-hipa/medical_page_classification/output/ --validation_size 0  --test_size .2 --train_size .8
+python ./converter.py --source_dir /home/greg/datasets/private/data-hipa/medical_page_classification/raw --output_dir /home/greg/datasets/private/data-hipa/medical_page_classification/output/ --validation_size 0  --test_size .2 --train_size .8
 ```
 
 
