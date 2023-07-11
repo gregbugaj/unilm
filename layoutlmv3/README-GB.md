@@ -21,11 +21,17 @@ python -m torch.distributed.launch --nproc_per_node=1 ./train.py
 ``` 
 
 
-
 ```
 tensorboard --logdir=./logs
 ```
 
+```
+wandb server start --upgrade
+```
+
+```
+wandb login --relogin
+```
 
 
 LARGE
@@ -248,8 +254,119 @@ LARGE
 
 
 
+-- BASE 
+wandb: Run summary:
+wandb:                  eval/accuracy 0.89267
+wandb:                        eval/f1 0.84425
+wandb:                      eval/loss 1.22023
+wandb:                 eval/precision 0.83448
+wandb:                    eval/recall 0.85426
+wandb:                   eval/runtime 8.3803
+wandb:        eval/samples_per_second 47.134
+wandb:          eval/steps_per_second 47.134
+wandb:                    train/epoch 50.25
+wandb:              train/global_step 10000
+wandb:            train/learning_rate 0.0
+wandb:                     train/loss 0.0001
+wandb:               train/total_flos 1.0610876067072e+16
+wandb:               train/train_loss 0.04689
+wandb:            train/train_runtime 1368.8808
+wandb: train/train_samples_per_second 29.221
+wandb:   train/train_steps_per_second 7.305
+
+
+
+--- BASE SEGMENT_CURRENT_LINE
+
+wandb: 
+wandb: Run history:
+wandb:                  eval/accuracy ▅▄▁▄▇▆▆▅██▇
+wandb:                        eval/f1 ▄▅▁▄█▆▄▃▅▅█
+wandb:                      eval/loss ▁▄▅▆▇▅▆▇▇█▇
+wandb:                 eval/precision ▄▅▁▅█▆▃▁▄▅█
+wandb:                    eval/recall ▄▅▁▄█▇▆▅▆▆█
+wandb:                   eval/runtime ▆█▇▁▅▆▃▃▅▄▄
+wandb:        eval/samples_per_second ▂▁▂█▃▃▅▅▃▅▅
+wandb:          eval/steps_per_second ▂▁▂█▃▃▅▅▃▅▅
+wandb:                    train/epoch ▁▁▁▂▂▂▂▃▃▃▄▄▄▄▄▅▅▅▅▆▆▆▇▇▇▇▇█████
+wandb:              train/global_step ▁▁▁▂▂▂▂▃▃▃▄▄▄▄▄▅▅▅▅▆▆▆▇▇▇▇▇█████
+wandb:            train/learning_rate ██▇▇▇▆▆▅▅▅▄▄▄▃▃▂▂▂▁▁
+wandb:                     train/loss █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:               train/total_flos ▁
+wandb:               train/train_loss ▁
+wandb:            train/train_runtime ▁
+wandb: train/train_samples_per_second ▁
+wandb:   train/train_steps_per_second ▁
+wandb: 
+wandb: Run summary:
+wandb:                  eval/accuracy 0.9023
+wandb:                        eval/f1 0.86765
+wandb:                      eval/loss 1.1141
+wandb:                 eval/precision 0.85966
+wandb:                    eval/recall 0.87579
+wandb:                   eval/runtime 9.6308
+wandb:        eval/samples_per_second 41.014
+wandb:          eval/steps_per_second 41.014
+wandb:                    train/epoch 50.25
+wandb:              train/global_step 10000
+wandb:            train/learning_rate 0.0
+wandb:                     train/loss 0.0001
+wandb:               train/total_flos 1.0610876067072e+16
+wandb:               train/train_loss 0.0379
+wandb:            train/train_runtime 1663.565
+wandb: train/train_samples_per_second 24.045
+wandb:   train/train_steps_per_second 6.011
+
+
+-- BASE  STRIDE 128
+
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: 
+wandb: Run history:
+wandb:                  eval/accuracy ▁▆▆▅▅█▇▇▇▇▇
+wandb:                        eval/f1 ▁▆▆▆▇▇█▇███
+wandb:                      eval/loss ▁▁▃▅▇▅▆▆▇█▆
+wandb:                 eval/precision ▁▆▅▆▇▇█▇███
+wandb:                    eval/recall ▁▇▇▆▇▇█████
+wandb:                   eval/runtime ▅▅▇▄█▄▁▃▁▁▂
+wandb:        eval/samples_per_second ▄▄▂▄▁▅█▆██▇
+wandb:          eval/steps_per_second ▄▄▂▄▁▅█▆██▇
+wandb:                    train/epoch ▁▁▁▂▂▂▂▃▃▃▄▄▄▄▄▅▅▅▅▆▆▆▇▇▇▇▇█████
+wandb:              train/global_step ▁▁▁▂▂▂▂▃▃▃▄▄▄▄▄▅▅▅▅▆▆▆▇▇▇▇▇█████
+wandb:            train/learning_rate ██▇▇▇▆▆▅▅▅▄▄▄▃▃▂▂▂▁▁
+wandb:                     train/loss █▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:               train/total_flos ▁
+wandb:               train/train_loss ▁
+wandb:            train/train_runtime ▁
+wandb: train/train_samples_per_second ▁
+wandb:   train/train_steps_per_second ▁
+wandb: 
+wandb: Run summary:
+wandb:                  eval/accuracy 0.91079
+wandb:                        eval/f1 0.85973
+wandb:                      eval/loss 0.91185
+wandb:                 eval/precision 0.84622
+wandb:                    eval/recall 0.87368
+wandb:                   eval/runtime 13.3387
+wandb:        eval/samples_per_second 46.256
+wandb:          eval/steps_per_second 46.256
+wandb:                    train/epoch 30.3
+wandb:              train/global_step 10000
+wandb:            train/learning_rate 0.0
+wandb:                     train/loss 0.0001
+wandb:               train/total_flos 1.06002519108096e+16
+wandb:               train/train_loss 0.04648
+wandb:            train/train_runtime 1544.4472
+wandb: train/train_samples_per_second 25.899
+wandb:   train/train_steps_per_second 6.475
+
+
+
 # Reference 
 
 [Max_seq_length LayoutLMV3 - How to implement it ? #942](https://github.com/microsoft/unilm/issues/942)
  
 [LayoutLMV3 Training with Morethan 512 tokens. #19190](https://github.com/huggingface/transformers/issues/19190#issuecomment-1441883471)
+
+
+https://github.com/Sarath1729-2002/Form_Understandin_using_LayoutLMV3

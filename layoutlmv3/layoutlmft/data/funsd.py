@@ -4,12 +4,11 @@ Reference: https://huggingface.co/datasets/nielsr/funsd/blob/main/funsd.py
 '''
 import json
 import os
-
-import datasets
-
 from re import L
 
 from PIL import Image
+
+import datasets
 import multiprocessing as mp
 from concurrent.futures.thread import ThreadPoolExecutor
 import concurrent.futures
@@ -18,20 +17,41 @@ from multiprocessing import Pool
 
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
+
 import torch
 
+def load_image(image_path):
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(image_path)
 
-from layoutlmft.data.image_utils import load_image, normalize_bbox
+    image = Image.open(image_path).convert("RGB")
+    w, h = image.size
+    return image, (w, h)
 
+def normalize_bbox(bbox, size):
+    return [
+        int(1000 * bbox[0] / size[0]),
+        int(1000 * bbox[1] / size[1]),
+        int(1000 * bbox[2] / size[0]),
+        int(1000 * bbox[3] / size[1]),
+    ]
 
 logger = datasets.logging.get_logger(__name__)
 
 
 _CITATION = """\
-
+@article{Jaume2019FUNSDAD,
+  title={FUNSD: A Dataset for Form Understanding in Noisy Scanned Documents},
+  author={Guillaume Jaume and H. K. Ekenel and J. Thiran},
+  journal={2019 International Conference on Document Analysis and Recognition Workshops (ICDARW)},
+  year={2019},
+  volume={2},
+  pages={1-6}
+}
 """
 
 _DESCRIPTION = """\
+https://guillaumejaume.github.io/FUNSD/
 """
 
 
@@ -48,15 +68,10 @@ class FunsdConfig(datasets.BuilderConfig):
 
 
 class Funsd(datasets.GeneratorBasedBuilder):
-    """dataset."""
-
-    # 1.10.1 -> LV3 single box layout (GOOD)
-    # 1.10.2 -> LV3 mulibox layout (????)
-    # 1.10.3 -> LV3 mulibox layout / small dataset
-    
+    """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.10.3"), description="FUNSD Like dataset"),
+        FunsdConfig(name="funsd", version=datasets.Version("1.8.0"), description="FUNSD like dataset, corr-indexing"),
     ]
 
     def _info(self):
@@ -73,9 +88,9 @@ class Funsd(datasets.GeneratorBasedBuilder):
                     #     )
                     # ),
 
-                     "ner_tags": datasets.Sequence(
+                    "ner_tags": datasets.Sequence(
                         datasets.features.ClassLabel(
-                             names=[
+                            names=[
                                 "O",
                                 'B-MEMBER_NAME', 'I-MEMBER_NAME',
                                 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER',
@@ -109,16 +124,27 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-CHECK_AMT_ANSWER', 'I-CHECK_AMT_ANSWER',
                                 'B-CHECK_NUMBER', 'I-CHECK_NUMBER',
                                 'B-CHECK_NUMBER_ANSWER', 'I-CHECK_NUMBER_ANSWER',
+                                'B-LIST', 'I-LIST',
+                                'B-FOOTER', 'I-FOOTER',
+                                'B-DATE', 'I-DATE',
+                                'B-IDENTIFIER', 'I-IDENTIFIER',
+                                'B-PROC_CODE', 'I-PROC_CODE',
+                                'B-PROC_CODE_ANSWER', 'I-PROC_CODE_ANSWER',
+                                'B-PROVIDER', 'I-PROVIDER',
+                                'B-PROVIDER_ANSWER', 'I-PROVIDER_ANSWER',
+                                'B-MONEY', 'I-MONEY',
+                                'B-COMPANY', 'I-COMPANY',
                             ]
                         )
                     ),
-                    
-                    "image": datasets.Array3D(shape=(3, 224, 224), dtype="uint8"),
+
+                    "image": datasets.features.Image(),
+                    # "image": datasets.Array3D(shape=(3, 224, 224), dtype="uint8"),
                     "image_path": datasets.Value("string"),
                 }
             ),
             supervised_keys=None,
-            homepage="",
+            homepage="https://guillaumejaume.github.io/FUNSD/",
             citation=_CITATION,
         )
 
@@ -127,6 +153,10 @@ class Funsd(datasets.GeneratorBasedBuilder):
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+        # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
+        downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
+        downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
 
         return [
             datasets.SplitGenerator(
@@ -136,6 +166,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
                 name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
             ),
         ]
+
 
     def get_line_bbox(self, bboxs):
         x = [bboxs[i][j] for i in range(len(bboxs)) for j in range(0, len(bboxs[i]), 2)]
@@ -147,122 +178,89 @@ class Funsd(datasets.GeneratorBasedBuilder):
         bbox = [[x0, y0, x1, y1] for _ in range(len(bboxs))]
         return bbox
 
+    def _generate_(self, guid, file):
+        logger.info("⏳ Generating examples from = %s", self.filepath)
+        ann_dir = os.path.join(self.filepath, "annotations")
+        img_dir = os.path.join(self.filepath, "images")
 
-    def _generate_examples(self, filepath):
-        logger.info("⏳ Generating examples from = %s", filepath)
-        ann_dir = os.path.join(filepath, "annotations")
-        img_dir = os.path.join(filepath, "images")
+        tokens = []
+        bboxes = []
+        ner_tags = []
 
-        items = sorted(os.listdir(ann_dir))
-        np.random.shuffle(items)
 
-        stop = int(len(items) *.25)
-        # stop = int(len(items))
-        print(f"stop = {stop}")
-        font = ImageFont.load_default()
+        file_path = os.path.join(ann_dir, file)
+        with open(file_path, "r", encoding="utf8") as f:
+            data = json.load(f)
+        image_path = os.path.join(img_dir, file)
+        image_path = image_path.replace("json", "png")
+        image, size = load_image(image_path)
 
-        for guid, file in enumerate(items):
-            if guid == stop:
-                break
+        # somehow we got a TEXT token with size of [0,0,W,H]
+        # TODO: investigate
+        # example :/corr-indexer-augmented/dataset/training_data/annotations/152658473_2_140_0.json
+        #       "words": [
+        # {
+        #   "box": [
+        #     0,
+        #     0,
+        #     776,
+        #     1000
+        #   ],
+        #   "text": ":"
+        # }
+        # ]
+    
+        for item in data["form"]:
+            cur_line_bboxes = []
+            words, label = item["words"], item["label"]
+            # remap bad 'text:' label with `:`
+            for w in words:
+                if "text:" in w:
+                    w["text"] = w["text:"]
 
-            print(f"{guid} : {file}")
-            tokens = []
-            bboxes = []
-            ner_tags = []
-            bboxes_raw = []
+            words = [w for w in words if w["text"].strip() != ""]
+            if len(words) == 0:
+                continue
 
-            file_path = os.path.join(ann_dir, file)
-            with open(file_path, "r", encoding="utf8") as f:
-                data = json.load(f)
-            image_path = os.path.join(img_dir, file)
-            image_path = image_path.replace("json", "png")
-            image, size = load_image(image_path)
-            # image_pil = Image.open(image_path).convert("RGB")
-            word_index = 0
-            for item in data["form"]:
-                cur_line_bboxes = []
-                words, label = item["words"], item["label"]
-
-                # remap bad 'text:' label with `:`                
+            if label == "other":
                 for w in words:
-                    if "text:" in w:
-                        w["text"] = w["text:"]
+                    # TODO: How did we endup with O-Token with size of [0,0,W,H]
+                    other_box  = normalize_bbox(w["box"], size)
+                    if other_box[0]== 0 and other_box[1] == 0:
+                        continue
 
-                for w in words :
-                    if "text" not in w:
-                        print(w)
-                        raise Exception("EX")
+                    tokens.append(w["text"])
+                    ner_tags.append("O")
+                    cur_line_bboxes.append(other_box)
+            else:
+                tokens.append(words[0]["text"])
+                ner_tags.append("B-" + label.upper())
+                cur_line_bboxes.append(normalize_bbox(words[0]["box"], size))
+                for w in words[1:]:
+                    tokens.append(w["text"])
+                    ner_tags.append("I-" + label.upper())
+                    cur_line_bboxes.append(normalize_bbox(w["box"], size))
 
-                words = [w for w in words if w["text"].strip() != ""]
+            # by default: --segment_level_layout 1
+            # if do not want to use segment_level_layout, comment the following line
+            if len(cur_line_bboxes) == 0:
+                print(f"Empty cur_line_bboxes for {words} : {file_path}")
+                continue
+                
+            cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
+            bboxes.extend(cur_line_bboxes)
 
-                if len(words) == 0:
-                    continue
-                if label == "other":
-                    for w in words:
-                        # TODO: How did we endup with O-Token with size of [0,0,W,H]
-                        other_box  = normalize_bbox(w["box"], size)
-                        if other_box[0]== 0 and other_box[1] == 0:
-                            continue
-                        tokens.append(w["text"])
-                        ner_tags.append("O")
-                        cur_line_bboxes.append(other_box)
-                        bboxes_raw.append(w["box"])
-                else:
-                    tokens.append(words[0]["text"])
-                    ner_tags.append("B-" + label.upper())
-                    cur_line_bboxes.append(normalize_bbox(words[0]["box"], size))
-                    bboxes_raw.append(words[0]["box"])
 
-                    for w in words[1:]:
-                        tokens.append(w["text"])
-                        ner_tags.append("I-" + label.upper())
-                        cur_line_bboxes.append(normalize_bbox(w["box"], size))
-                        bboxes_raw.append(w["box"])
-                # by default: --segment_level_layout 1
-                # if do not want to use segment_level_layout, comment the following line
-                # cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
+        if len(bboxes) == 0:
+            payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
+            print(f"Empty Boxes for : {file_path}")
+            return 
 
-                if True:
-                    boxed = True
-                    label = label.upper()
-                    if label == "OTHER" or label== "ANSWER" or label == "PARAGRAPH" or label == "ADDRESS" or label == "GREETING" or label == "HEADER" :
-                        boxed = False
-
-                    if boxed:
-                        # print(f"B {label} : {words} >> {cur_line_bboxes}")
-                        cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
-                        # pass
-                        
-                bboxes.extend(cur_line_bboxes)
-
-            if False:
-                draw = ImageDraw.Draw(image_pil)
-                # print(f"B = {bboxes_raw}")
-                bboxes_raw = self.get_line_bbox(bboxes) 
-                # print(f"A = {bboxes_raw}")
-                for tag, box in zip(ner_tags, bboxes):
-                    print(f"TAG = {tag} : {box}")
-                    text = f"{word_index}"
-                    draw.rectangle(box, outline='red')
-                    draw.text((box[0] + 10, box[1] - 10), text=text, fill='blue' )
-                    # print(f"\t\t\t {word_index} => {tag} -> {words_lower}")
-                    word_index +=1
-                image_pil.save(f"/tmp/snippet/{guid}.png")
-                # os.exit()
-        
-        if len(bboxes) != len(tokens):
-            print("ASSERTION ERROR")
-            print(len(bboxes))
-            print(len(tokens))
-            os.exit()
-
-        assert len(bboxes) == len(tokens)
-        yield guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
+        return guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
                         "image": image, "image_path": image_path}
 
 
-
-    def _generate_examplesXXXX(self, filepath):
+    def _generate_examples(self, filepath):
         logger.info("⏳ Generating examples from = %s", filepath)
         ann_dir = os.path.join(filepath, "annotations")
         img_dir = os.path.join(filepath, "images")
@@ -271,26 +269,26 @@ class Funsd(datasets.GeneratorBasedBuilder):
         items = sorted(os.listdir(ann_dir))
         np.random.shuffle(items)
 
-        stop = int(len(items) *.1)
+        stop = int(len(items) *.50)
         stop = int(len(items))
         
-        print(len(items))
+        # https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
+        self.filepath = filepath
         for guid, file in enumerate(items):
             file_path = os.path.join(ann_dir, file)
-            __args = (filepath, guid, file)
+            __args = (guid, file)
             args.append(__args)
             if guid == stop:
                 break
 
         results = []
         start = time.time()
-        processes = int(mp.cpu_count() * .95)
-        processes = 4
-
-        print(f"\nPool Executor: {processes}")
+        print("\nPool Executor:")
         print("Time elapsed: %s" % (time.time() - start))
 
-        pool = Pool(processes=processes, maxtasksperchild=1024)
+        processes = int(mp.cpu_count() * .90)
+        processes = 4
+        pool = Pool(processes=processes)
         pool_results = pool.starmap(self._generate_, args)
 
         pool.close()

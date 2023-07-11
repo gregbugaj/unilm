@@ -1,0 +1,165 @@
+{
+    "os": "Linux-5.19.0-45-generic-x86_64-with-glibc2.35",
+    "python": "3.10.6",
+    "heartbeatAt": "2023-07-11T09:25:09.983002",
+    "startedAt": "2023-07-11T09:25:09.576345",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/greg/dev/unilm/layoutlmv3/examples/./train.py",
+    "codePath": "layoutlmv3/examples/train.py",
+    "git": {
+        "remote": "git@github.com:gregbugaj/unilm.git",
+        "commit": "41d6d96c3a074ae3d55e7f24013a8b062e0d9db6"
+    },
+    "email": "gregbugaj@yahoo.com",
+    "root": "/home/greg/dev/unilm",
+    "host": "xpredator",
+    "username": "greg",
+    "executable": "/home/greg/environment/marie/bin/python",
+    "cpu_count": 16,
+    "cpu_count_logical": 24,
+    "cpu_freq": {
+        "current": 2354.2303333333334,
+        "min": 800.0,
+        "max": 4716.666666666667
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 1957.43,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 3713.729,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 1421.953,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 1401.228,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 1907.417,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 2594.258,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 1497.334,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 2884.373,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 1205.175,
+            "min": 800.0,
+            "max": 5200.0
+        },
+        {
+            "current": 3200.0,
+            "min": 800.0,
+            "max": 5200.0
+        },
+        {
+            "current": 2685.42,
+            "min": 800.0,
+            "max": 5200.0
+        },
+        {
+            "current": 3200.0,
+            "min": 800.0,
+            "max": 5200.0
+        },
+        {
+            "current": 1714.122,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 3200.0,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 1675.354,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 3200.0,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 799.998,
+            "min": 800.0,
+            "max": 3900.0
+        },
+        {
+            "current": 800.062,
+            "min": 800.0,
+            "max": 3900.0
+        },
+        {
+            "current": 1282.015,
+            "min": 800.0,
+            "max": 3900.0
+        },
+        {
+            "current": 3200.0,
+            "min": 800.0,
+            "max": 3900.0
+        },
+        {
+            "current": 3200.0,
+            "min": 800.0,
+            "max": 3900.0
+        },
+        {
+            "current": 799.973,
+            "min": 800.0,
+            "max": 3900.0
+        },
+        {
+            "current": 1054.631,
+            "min": 800.0,
+            "max": 3900.0
+        },
+        {
+            "current": 3200.0,
+            "min": 800.0,
+            "max": 3900.0
+        }
+    ],
+    "disk": {
+        "total": 457.2809295654297,
+        "used": 342.2838020324707
+    },
+    "gpu": "NVIDIA Graphics Device",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA Graphics Device",
+            "memory_total": 25757220864
+        }
+    ],
+    "memory": {
+        "total": 62.58780288696289
+    }
+}

@@ -2,7 +2,7 @@
 
 export BS=16
 export MAX_JOBS=8
-# CUDA_VISIBLE_DEVICES=1 
+CUDA_VISIBLE_DEVICES=1 
 
 # --max_train_samples 5000 \
 # --max_test_samples 1000 \
@@ -28,13 +28,12 @@ export MAX_JOBS=8
     # --resume_from_checkpoint /mnt/data/models/layoutlmv3-base-finetuned-segment_level_layout/checkpoint-500 \
 
 
-PYTHONPATH="$PWD" python -m torch.distributed.launch \
-    --nproc_per_node=2 --master_port 4398 examples/run_funsd.py \
+PYTHONPATH="$PWD" python  examples/run_funsd.py \
     --dataset_name funsd \
     --do_train \
     --do_eval \
     --model_name_or_path microsoft/layoutlmv3-base \
-    --output_dir /home/gbugaj/tmp/models/layoutlmv3-base-finetuned \
+    --output_dir /mnt/data/models/layoutlmv3-base-finetuned \
     --segment_level_layout 1 --visual_embed 1 --input_size 224 \
     --max_steps 10000 \
     --save_steps 500 \
@@ -45,9 +44,9 @@ PYTHONPATH="$PWD" python -m torch.distributed.launch \
     --per_device_train_batch_size 8 \
     --gradient_accumulation_steps 1 \
     --return_entity_level_metrics false \
-    --dataloader_num_workers 8 \
+    --dataloader_num_workers 1 \
     --cache_dir /tmp/cache/ \
-    --preprocessing_num_workers 8 \
+    --preprocessing_num_workers 1 \
     --overwrite_output_dir \
     --pad_to_max_length true \
     --fp16

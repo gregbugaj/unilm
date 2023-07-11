@@ -1,0 +1,47 @@
+diff --git a/layoutlmv3/examples/funsd_dataset/funsd_dataset.py b/layoutlmv3/examples/funsd_dataset/funsd_dataset.py
+index 6b250a5..727247f 100644
+--- a/layoutlmv3/examples/funsd_dataset/funsd_dataset.py
++++ b/layoutlmv3/examples/funsd_dataset/funsd_dataset.py
+@@ -153,6 +153,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
+         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
+         downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
++        downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
++        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
+ 
+         return [
+             datasets.SplitGenerator(
+diff --git a/layoutlmv3/examples/train.py b/layoutlmv3/examples/train.py
+index c41ad25..0b7770e 100644
+--- a/layoutlmv3/examples/train.py
++++ b/layoutlmv3/examples/train.py
+@@ -80,6 +80,7 @@ if False:
+ # processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
+ 
+ model_name_or_path = "microsoft/layoutlmv3-large"
++model_name_or_path = "microsoft/layoutlmv3-base"
+ 
+ config = AutoConfig.from_pretrained (
+     model_name_or_path,
+@@ -87,9 +88,9 @@ config = AutoConfig.from_pretrained (
+     finetuning_task="ner",
+     cache_dir="/mnt/data/cache",
+     input_size=224,
+-    hidden_dropout_prob = .2,
+-    attention_probs_dropout_prob = .2,
+-    has_relative_attention_bias=False
++    # hidden_dropout_prob = .1,
++    # attention_probs_dropout_prob = .1,
++    # has_relative_attention_bias=False
+ )
+ 
+ # config.hidden_dropout_prob = 0.2
+@@ -239,7 +240,7 @@ training_args = TrainingArguments(
+                   eval_steps=1000,
+                   load_best_model_at_end=True,
+                   metric_for_best_model="f1",
+-                  output_dir="/mnt/data/models/layoutlmv3-large-fullyannotated",
++                  output_dir="/mnt/data/models/layoutlmv3-base-fullyannotated",
+                   # resume_from_checkpoint="/mnt/data/models/layoutlmv3-large-finetuned-small-100/checkpoint-750",
+                   fp16=True,
+                 )

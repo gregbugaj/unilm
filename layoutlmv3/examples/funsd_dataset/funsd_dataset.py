@@ -153,6 +153,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
         downloaded_file = "/data/dataset/private/corr-indexer-augmented"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
+        downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
 
         return [
             datasets.SplitGenerator(
@@ -179,7 +181,6 @@ class Funsd(datasets.GeneratorBasedBuilder):
         ann_dir = os.path.join(self.filepath, "annotations")
         img_dir = os.path.join(self.filepath, "images")
 
-        print(guid)
         tokens = []
         bboxes = []
         ner_tags = []
@@ -191,6 +192,22 @@ class Funsd(datasets.GeneratorBasedBuilder):
         image_path = os.path.join(img_dir, file)
         image_path = image_path.replace("json", "png")
         image, size = load_image(image_path)
+
+        # somehow we got a TEXT token with size of [0,0,W,H]
+        # TODO: investigate
+        # example :/corr-indexer-augmented/dataset/training_data/annotations/152658473_2_140_0.json
+        #       "words": [
+        # {
+        #   "box": [
+        #     0,
+        #     0,
+        #     776,
+        #     1000
+        #   ],
+        #   "text": ":"
+        # }
+        # ]
+    
         for item in data["form"]:
             cur_line_bboxes = []
             words, label = item["words"], item["label"]
@@ -202,6 +219,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
             words = [w for w in words if w["text"].strip() != ""]
             if len(words) == 0:
                 continue
+
             if label == "other":
                 for w in words:
                     # TODO: How did we endup with O-Token with size of [0,0,W,H]
@@ -220,26 +238,20 @@ class Funsd(datasets.GeneratorBasedBuilder):
                     tokens.append(w["text"])
                     ner_tags.append("I-" + label.upper())
                     cur_line_bboxes.append(normalize_bbox(w["box"], size))
-            # cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
 
-            if False:
-                boxed = True
-                label = label.upper()
-                if label == "OTHER" or label== "ANSWER" or label == "PARAGRAPH" or label == "ADDRESS" or label == "GREETING" or label == "HEADER" :
-                    boxed = False
-
-                if boxed:
-                    # print(f"B {label} : {words} >> {cur_line_bboxes}")
-                    cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
-                    pass
-                    
+            # by default: --segment_level_layout 1
+            # if do not want to use segment_level_layout, comment the following line
+            if len(cur_line_bboxes) == 0:
+                print(f"Empty cur_line_bboxes for {words} : {file_path}")
+                continue
+                
+            cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
             bboxes.extend(cur_line_bboxes)
 
 
         if len(bboxes) == 0:
             payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
             print(f"Empty Boxes for : {file_path}")
-            # print(payload)
             return 
 
         return guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,

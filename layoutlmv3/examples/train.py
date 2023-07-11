@@ -80,6 +80,7 @@ if False:
 # processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
 
 model_name_or_path = "microsoft/layoutlmv3-large"
+# model_name_or_path = "microsoft/layoutlmv3-base"
 
 config = AutoConfig.from_pretrained (
     model_name_or_path,
@@ -87,18 +88,16 @@ config = AutoConfig.from_pretrained (
     finetuning_task="ner",
     cache_dir="/mnt/data/cache",
     input_size=224,
-    hidden_dropout_prob = .2,
-    attention_probs_dropout_prob = .2,
-    has_relative_attention_bias=False
+    id2label=id2label,
+    label2id=label2id,
+    # hidden_dropout_prob = .1,
+    # attention_probs_dropout_prob = .1,
+    # has_relative_attention_bias=False
 )
-
-# config.hidden_dropout_prob = 0.2
-# config.attention_probs_dropout_prob = 0.1
-
 
 # Max model size is 512, so we will need to handle any documents larger thank that
 feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False, do_resize=True, resample=Image.LANCZOS)
-tokenizer = LayoutLMv3TokenizerFast.from_pretrained(model_name_or_path)
+tokenizer = LayoutLMv3TokenizerFast.from_pretrained(model_name_or_path, is_split_into_words=True)
 processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
 features = dataset["train"].features
@@ -140,7 +139,14 @@ def prepare_examples(examples):
   boxes = examples[boxes_column_name]
   word_labels = examples[label_column_name]
 
-  encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True,  padding="max_length")
+#   encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True,  padding="max_length")
+
+  encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True, stride = 128, 
+         padding="max_length", max_length=512, return_overflowing_tokens=True, return_offsets_mapping=True)  
+  
+  offset_mapping = encoding.pop('offset_mapping')
+  overflow_to_sample_mapping = encoding.pop('overflow_to_sample_mapping')
+  
   return encoding
 
 # we need to define custom features for `set_format` (used later on) to work properly
@@ -239,8 +245,8 @@ training_args = TrainingArguments(
                   eval_steps=1000,
                   load_best_model_at_end=True,
                   metric_for_best_model="f1",
-                  output_dir="/mnt/data/models/layoutlmv3-large-fullyannotated",
-                  # resume_from_checkpoint="/mnt/data/models/layoutlmv3-large-finetuned-small-100/checkpoint-750",
+                  output_dir="/mnt/data/models/layoutlmv3-base-stride",
+                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-base-stride/checkpoint-6000",
                   fp16=True,
                 )
 
@@ -253,7 +259,7 @@ trainer = Trainer(
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
-    tokenizer=processor,
+    tokenizer=tokenizer,
     data_collator=default_data_collator,
     compute_metrics=compute_metrics,
 )
@@ -403,28 +409,5 @@ for word, box, label in zip(example['tokens'], example['bboxes'], example['ner_t
   draw.text((box[0] + 10, box[1] - 10), actual_label, fill=label2color[actual_label], font=font)
 
 image.save("/tmp/tensors/real.png")
-
-
-#
-#
-# Loading best model from /mnt/data/models/layoutlmv3-large-finetuned-small/checkpoint-4500 (score: 0.9116538131962296).
-# {'train_runtime': 2593.4786, 'train_samples_per_second': 7.712, 'train_steps_per_second': 1.928, 'train_loss': 0.06096109193563461, 'epoch': 18.73}
-# 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5000/5000 [43:13<00:00,  1.93it/s]
-# Saving model checkpoint to /mnt/data/models/layoutlmv3-large-finetuned-small
-# Configuration saved in /mnt/data/models/layoutlmv3-large-finetuned-small/config.json
-# Model weights saved in /mnt/data/models/layoutlmv3-large-finetuned-small/pytorch_model.bin
-# Feature extractor saved in /mnt/data/models/layoutlmv3-large-finetuned-small/preprocessor_config.json
-# tokenizer config file saved in /mnt/data/models/layoutlmv3-large-finetuned-small/tokenizer_config.json
-# Special tokens file saved in /mnt/data/models/layoutlmv3-large-finetuned-small/special_tokens_map.json
-# ***** train metrics *****
-#   epoch                    =      18.73
-#   train_loss               =      0.061
-#   train_runtime            = 0:43:13.47
-#   train_samples            =       1065
-#   train_samples_per_second =      7.712
-#   train_steps_per_second   =      1.928
-# ***** Running Evaluation *****
-#   Num examples = 400
-#   Batch size = 1
 
 

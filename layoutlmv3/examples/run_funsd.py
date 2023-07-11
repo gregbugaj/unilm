@@ -339,6 +339,7 @@ def main():
         boxes = examples[boxes_column_name]
         word_labels = examples[label_column_name]
 
+        # is_split_into_words = True   is_pretokenized = True
         tokenized_inputs = tokenizer(
             words,
             boxes=boxes, 
@@ -347,7 +348,7 @@ def main():
             truncation=True,
             return_overflowing_tokens=True,
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
-            # is_split_into_words=True, TODO : This is not working, possible bug in Tokenizer
+            # is_split_into_words=True, #TODO : This is not working, possible bug in Tokenizer
         )
 
         labels = []
