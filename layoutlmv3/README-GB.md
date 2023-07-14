@@ -355,6 +355,7 @@ wandb:              train/global_step 10000
 wandb:            train/learning_rate 0.0
 wandb:                     train/loss 0.0001
 wandb:               train/total_flos 1.06002519108096e+16
+
 wandb:               train/train_loss 0.04648
 wandb:            train/train_runtime 1544.4472
 wandb: train/train_samples_per_second 25.899
@@ -370,3 +371,45 @@ wandb:   train/train_steps_per_second 6.475
 
 
 https://github.com/Sarath1729-2002/Form_Understandin_using_LayoutLMV3
+
+
+
+
+wandb: 
+wandb: Run history:
+wandb:                  eval/accuracy ▁▆▇▇▇▇▇▆▇▇▇▇▇▇▇█▇█▇█▇▇▇▆▇█▇▇▇▇█████▇████
+wandb:                        eval/f1 ▁▇██▇███████████████████████████████████
+wandb:                      eval/loss ▃▁▂▄▃▄▅▄▅▅▆▆▆▆▇▅▆▅▇▆▆▇▇█▇▆▇▇▇▇▇▆▇▇▇▇▇▇▇▇
+wandb:                 eval/precision ▁▇▇█▇▇▇█████████████████████████████████
+wandb:                    eval/recall ▁▇██████████████████████████████████████
+wandb:                   eval/runtime ▁▁▁▄▆▄▅▄▄▄▄▄▄▃▃█▆▅▄▇▄▆▅▅▅▅▄▄▃▄▄▇▄▃▇▅▄▅▄▃
+wandb:        eval/samples_per_second ██▇▅▃▄▄▅▄▄▄▄▅▅▅▁▂▃▄▂▄▃▄▄▃▃▄▄▅▄▄▂▅▅▂▄▄▄▄▅
+wandb:          eval/steps_per_second ██▇▅▃▄▄▅▄▄▄▄▅▅▅▁▂▃▄▂▄▃▄▄▃▃▄▄▅▄▄▂▅▅▂▄▄▄▄▅
+wandb:                    train/epoch ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇▇▇███
+wandb:              train/global_step ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇▇▇███
+wandb:            train/learning_rate ███▇▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▁▁▁
+wandb:                     train/loss █▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:               train/total_flos ▁
+wandb:               train/train_loss ▁
+wandb:            train/train_runtime ▁
+wandb: train/train_samples_per_second ▁
+wandb:   train/train_steps_per_second ▁
+wandb: 
+wandb: Run summary:
+wandb:                  eval/accuracy 0.90912
+wandb:                        eval/f1 0.84808
+wandb:                      eval/loss 1.10491
+wandb:                 eval/precision 0.84762
+wandb:                    eval/recall 0.84854
+wandb:                   eval/runtime 11.2907
+wandb:        eval/samples_per_second 54.647
+wandb:          eval/steps_per_second 6.908
+wandb:                    train/epoch 60.61
+wandb:              train/global_step 10000
+wandb:            train/learning_rate 0.0
+wandb:                     train/loss 0.0001
+wandb:               train/total_flos 7.465256315492352e+16
+wandb:               train/train_loss 0.04133
+wandb:            train/train_runtime 4425.9494
+wandb: train/train_samples_per_second 18.075
+wandb:   train/train_steps_per_second 2.259

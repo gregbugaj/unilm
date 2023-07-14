@@ -91,13 +91,13 @@ config = AutoConfig.from_pretrained (
     input_size=224,
     id2label=id2label,
     label2id=label2id,
-    # hidden_dropout_prob = .1,
-    # attention_probs_dropout_prob = .1,
+    hidden_dropout_prob = .2,
+    attention_probs_dropout_prob = .2,
     # has_relative_attention_bias=False
 )
 
 # Max model size is 512, so we will need to handle any documents larger thank that
-feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False, do_resize=True, resample=Image.LANCZOS)
+feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False, do_resize=True, resample=Image.LANCZOS) # BICUBIC
 tokenizer = LayoutLMv3TokenizerFast.from_pretrained(model_name_or_path, is_split_into_words=True)
 processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
 
@@ -134,7 +134,7 @@ num_labels = len(label_list)
 # print(label_list)
 # print(id2label)
 
-def prepare_examples(examples):
+def prepare_examples (examples):
   images = examples[image_column_name]
   words = examples[text_column_name]
   boxes = examples[boxes_column_name]
@@ -143,12 +143,87 @@ def prepare_examples(examples):
 #   encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True,  padding="max_length")
 
   encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True, stride = 128, 
-         padding="max_length", max_length=512, return_overflowing_tokens=True, return_offsets_mapping=True)  
+         padding="max_length", max_length=512, return_overflowing_tokens=True, return_offsets_mapping=True,
+  )  
   
   offset_mapping = encoding.pop('offset_mapping')
   overflow_to_sample_mapping = encoding.pop('overflow_to_sample_mapping')
   
   return encoding
+
+
+def prepare_examplesXX(examples):
+    images = examples[image_column_name]
+    words = examples[text_column_name]
+    boxes = examples[boxes_column_name]
+    word_labels = examples[label_column_name]
+
+    #   encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True,  padding="max_length")
+
+    #   encoding = processor(images, words, boxes=boxes, word_labels=word_labels, truncation=True, stride = 128, 
+    #          padding="max_length", max_length=512, return_overflowing_tokens=True, return_offsets_mapping=True)  
+
+    #   offset_mapping = encoding.pop('offset_mapping')
+    #   overflow_to_sample_mapping = encoding.pop('overflow_to_sample_mapping')
+
+    stride = 128
+
+    tokenized_inputs = processor(
+        images,
+        words,
+        boxes= boxes,
+        word_labels=word_labels,
+        # is_split_into_words=True,
+        add_special_tokens=True,
+        truncation=True,
+        stride=stride,
+        padding=True,
+        max_length=512,
+        return_overflowing_tokens=True,  # important !!!
+        return_length=True,
+        verbose=True,
+    )
+
+    # print(tokenized_inputs)
+    
+    tag_everything = False
+
+
+    labels = []
+
+    i = 0
+    label = examples["ner_tags"]
+    overflowing = tokenized_inputs[i].overflowing
+
+    print("len overflowing: ", len(overflowing))
+    print("len label: ", len(label))
+    print("len tokenized_inputs A: ", len(tokenized_inputs["labels"]))
+
+    for i in range(0, 1 + len(overflowing)):
+        word_ids = tokenized_inputs[i].word_ids
+
+        print("len word_ids: ", len(word_ids))
+        print(word_ids)
+        previous_word_idx = None
+        label_ids = []
+        for word_idx in word_ids:  # Set the special tokens to -100.
+            if word_idx is None:
+                label_ids.append(np.zeros_like(label[0]))
+            elif (word_idx != previous_word_idx) or (tag_everything):
+                label_ids.append(label[word_idx])
+            else:
+                label_ids.append(np.zeros_like(label[0]))
+            previous_word_idx = word_idx
+
+        print("len label_ids: ", len(label_ids))
+        labels.extend(label_ids)
+
+    # tokenized_inputs["labels"] = labels
+
+    print("len tokenized_inputs X: ", len(tokenized_inputs["labels"]))
+
+    return tokenized_inputs
+
 
 # we need to define custom features for `set_format` (used later on) to work properly
 features = Features({

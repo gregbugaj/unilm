@@ -649,19 +649,20 @@ if __name__ == '__main__':
         # For debugging purposes
     if True:
         opts.model = "deit_base_patch16_224" 
-        opts.data_path = "/home/greg/datasets/dataset/data-hipa/medical_page_classification/output" 
-        opts.eval_data_path  = "/home/greg/datasets/dataset/data-hipa/medical_page_classification/output" 
-        opts.class_names_path  = "/home/greg/datasets/dataset/data-hipa/medical_page_classification/output/labels/labels.txt" 
-        opts.nb_classes = 12
+        
+        opts.data_path = "/home/greg/datasets/private/data-hipa/medical_page_classification/output" 
+        opts.eval_data_path  = "/home/greg/datasets/private/data-hipa/medical_page_classification/output" 
+        opts.class_names_path  = "/home/greg/datasets/private/data-hipa/medical_page_classification/output/labels/labels.txt" 
+        opts.nb_classes = 18
         opts.no_pin_mem = True
         opts.data_set =  "rvlcdip"
         opts.output_dir  =  "output_dir_pages"
         opts.log_dir  = "output_dir_pages/tf"
-        opts.batch_size  = 48
+        opts.batch_size  = 32
         opts.abs_pos_emb  = True
         opts.disable_rel_pos_bias  = True
         opts.num_workers  = 4
-        opts.epochs = 500
+        opts.epochs = 5000
         # opts.finetune  = "/home/greg/dev/models/dit/dit-base-224-p16-500k-62d53a.pth"
         # opts.finetune  = "/home/greg/dev/unilm/dit/classification/output_dir_pages/checkpoint-best.pth"
 

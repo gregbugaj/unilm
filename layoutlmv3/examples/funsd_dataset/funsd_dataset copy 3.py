@@ -2,6 +2,7 @@
 '''
 Reference: https://huggingface.co/datasets/nielsr/funsd/blob/main/funsd.py
 '''
+import functools
 import json
 import os
 from re import L
@@ -35,15 +36,6 @@ def normalize_bbox(bbox, size):
         int(1000 * bbox[2] / size[0]),
         int(1000 * bbox[3] / size[1]),
     ]
-
-def unnormalize_box(bbox, width, height):
-    return [
-        width * (bbox[0] / 1000),
-        height * (bbox[1] / 1000),
-        width * (bbox[2] / 1000),
-        height * (bbox[3] / 1000),
-    ]
-
 
 logger = datasets.logging.get_logger(__name__)
 
@@ -80,7 +72,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("3.0.1"), description="FUNSD like dataset, corr-indexing"),
+        FunsdConfig(name="funsd", version=datasets.Version("2.0.0"), description="FUNSD like dataset, corr-indexing"),
     ]
 
     def _info(self):
@@ -149,7 +141,6 @@ class Funsd(datasets.GeneratorBasedBuilder):
                     ),
 
                     "image": datasets.features.Image(),
-                    "image_path": datasets.Value("string"),
                 }
             ),
             supervised_keys=None,
@@ -164,8 +155,9 @@ class Funsd(datasets.GeneratorBasedBuilder):
         downloaded_file = "/data/dataset/private/corr-indexer/ready"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
-        downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
+
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/train/"}
@@ -255,7 +247,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
                 # print(f"Empty cur_line_bboxes for {words} : {file_path}")
                 continue
                 
-            # cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
+            cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
             bboxes.extend(cur_line_bboxes)
 
 
@@ -265,10 +257,10 @@ class Funsd(datasets.GeneratorBasedBuilder):
             return 
 
         return guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
-                        "image": image, "image_path": image_path}
+                        "image": image}
 
 
-    def _generate_examples(self, filepath):
+    def _generate_examples_SINGLE(self, filepath):
         logger.info("⏳ Generating examples from = %s", filepath)
         ann_dir = os.path.join(filepath, "annotations")
         img_dir = os.path.join(filepath, "images")
@@ -290,55 +282,56 @@ class Funsd(datasets.GeneratorBasedBuilder):
             if guid == stop:
                 break
             file_path = os.path.join(ann_dir, file)
-            res = self._generate_(guid, file)
-            print(f"Processed: {guid} : {file_path}")
+            yield self._generate_(guid, file)
             
-            self.visualize(res)
 
-            yield res   
-            
-    def visualize(self, results):
-        guid, data = results
+    def _generate_examples(self, filepath):
+        logger.info("⏳ Generating examples from = %s", filepath)
+        ann_dir = os.path.join(filepath, "annotations")
+        img_dir = os.path.join(filepath, "images")
 
-        import cv2
+        args = []
+        items = sorted(os.listdir(ann_dir))
+        np.random.shuffle(items)
+
+        stop = int(len(items) *.50)
+        stop = int(len(items))
+
+        print(f"Total files: {len(items)}")
+        # https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
+        self.filepath = filepath
         
-        image = data["image"]
-        bboxes = data["bboxes"]
-        ner_tags = data["ner_tags"]
-        tokens = data["tokens"]
-        guid = data["id"]
+        # ThreadPoolExecutor for IO-bound tasks and ProcessPoolExecutor for CPU-bound tasks.
+        from concurrent.futures import ProcessPoolExecutor
+        from concurrent.futures import ThreadPoolExecutor
 
-        image = image.convert("RGB").copy()
-        draw = ImageDraw.Draw(image)
-        width, height = image.size
-        font = ImageFont.load_default()
+        all_args = []
+        futures = []
+        start = time.time()
+        workers = 2 # mp.cpu_count()
 
-        def iob_to_label(label):
-            label = label[2:]
-            if not label:
-                return 'other'
-            return label
+    
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            for guid, file in enumerate(items):
+                if guid == stop:
+                    break
+                futures.append(executor.submit(self._generate_, guid, file))
+                # all_args.append((guid, file))   
 
+            # futures = { executor.submit(self._generate_, args): args for args in all_args }
 
-        for word, box, label in zip(tokens, bboxes, ner_tags):
-            # actual_label = iob_to_label(id2label[label]).lower()
-            actual_label = label[2:].lower()
-            box = unnormalize_box(box, width, height)
+            print("Time elapsed[submitted]: %s" % (time.time() - start))
+            for f in concurrent.futures.as_completed(futures):
+                try:
+                    r = f.result()
+                    yield r
+                except Exception as e:
+                    print(f"Error: {e}")
+                    continue
 
-            draw.rectangle(box, outline=label2color[actual_label], width=2)
-            draw.text((box[0] + 10, box[1] - 10), actual_label, fill=label2color[actual_label], font=font)
+            print("Time elapsed[all]: %s" % (time.time() - start))  
 
-        image.save(f"/tmp/ner/{guid}.png")
-
-        
-        # for bbox, ner_tag, token in zip(bboxes, ner_tags, tokens):
-        #     x0, y0, x1, y1 = bbox
-        #     cv2.rectangle(img, (x0, y0), (x1, y1), (0, 255, 0), 2)
-        #     cv2.putText(img, f"{token} {ner_tag}", (x0, y0), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-
-        
-
-    def _generate_examples_THREADED(self, filepath):
+    def _generate_examples_POOL(self, filepath):
         logger.info("⏳ Generating examples from = %s", filepath)
         ann_dir = os.path.join(filepath, "annotations")
         img_dir = os.path.join(filepath, "images")
@@ -380,56 +373,4 @@ class Funsd(datasets.GeneratorBasedBuilder):
             # print("Time elapsed[result]: %s  , %s" % (time.time() - start, r))
             yield r
 
-
-label2color = {
-        "pan": "blue",
-        "pan_answer": "green",
-        "dos": "orange",
-        "dos_answer": "violet",
-        "member": "blue",
-        "member_answer": "green",
-        "member_number": "blue",
-        "member_number_answer": "green",
-        "member_name": "blue",
-        "member_name_answer": "green",
-        "patient_name": "blue",
-        "patient_name_answer": "green",
-        "paragraph": "purple",
-        "greeting": "blue",
-        "address": "orange",
-        "question": "blue",
-        "answer": "aqua",
-        "document_control": "grey",
-        "header": "brown",
-        "letter_date": "deeppink",
-        "url": "darkorange",
-        "phone": "darkmagenta",
-        "other": "red",
-
-        "claim_number": "darkmagenta",
-        "claim_number_answer": "green",
-        "birthdate": "green",
-        "birthdate_answer": "red",
-        "billed_amt": "green",
-        "billed_amt_answer": "orange",
-        "paid_amt": "green",
-        "paid_amt_answer": "blue",
-        "check_amt": "orange",
-        "check_amt_answer": "darkmagenta",
-        "check_number": "orange",
-        "check_number_answer": "blue",
-        "check_date": "orange",
-        "check_date_answer": "blue",
-        "company": "orange",
-        "stamp": "blue",
-        "provider": "red",
-        "provider_answer": "green",
-        "identifier": "green",
-        'footer': 'brown',
-        "date": "green",
-        "money": "orange",
-        "list": "blue",
-        "proc_code": "green",
-        "proc_code_answer": "blue",
-        '' : "red",
-    }
+        print("Time elapsed[all]: %s" % (time.time() - start))                         

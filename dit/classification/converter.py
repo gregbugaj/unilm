@@ -14,7 +14,7 @@ from typing import List, Tuple, Dict, Any, Optional, Union
 
 
 
-def __scale_height(img, target_size, method=Image.Resampling.LANCZOS):
+def __scale_height(img, target_size, method=Image.LANCZOS):
     ow, oh = img.size
     scale = oh / target_size
     w = ow / scale
@@ -129,8 +129,9 @@ def convert_folder_to_rvlcdip(source_dir, output_dir, train_size:float, validati
                     
                     # print("Copying {} to {}".format(filename, dest_filename))
                     img = Image.open(dest_filename)
-                    framed = __scale_height(img, 1000, method=Image.LANCZOS)
-                    framed.save(dest_filename)
+                    # framed = __scale_height(img, 1000, method=Image.LANCZOS)
+                    # framed.save(dest_filename)
+
                     f.write("{} {}\n".format(rel_dest_filename, class_ids[clazz]))
                 except Exception as e:
                     print("Error copying file {}: {}".format(filename, e))
@@ -152,5 +153,4 @@ if __name__ == "__main__":
     args = parser.parse_args()  
 
     convert_folder_to_rvlcdip(args.source_dir, args.output_dir, args.train_size, args.validation_size, args.test_size)
-
 

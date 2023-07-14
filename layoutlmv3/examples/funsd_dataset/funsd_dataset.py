@@ -36,6 +36,15 @@ def normalize_bbox(bbox, size):
         int(1000 * bbox[3] / size[1]),
     ]
 
+def unnormalize_box(bbox, width, height):
+    return [
+        width * (bbox[0] / 1000),
+        height * (bbox[1] / 1000),
+        width * (bbox[2] / 1000),
+        height * (bbox[3] / 1000),
+    ]
+
+
 logger = datasets.logging.get_logger(__name__)
 
 
@@ -156,7 +165,6 @@ class Funsd(datasets.GeneratorBasedBuilder):
         # downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
         # downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
-
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/train/"}
@@ -326,4 +334,56 @@ class Funsd(datasets.GeneratorBasedBuilder):
             # print("Time elapsed[result]: %s  , %s" % (time.time() - start, r))
             yield r
 
-        print("Time elapsed[all]: %s" % (time.time() - start))                         
+
+label2color = {
+        "pan": "blue",
+        "pan_answer": "green",
+        "dos": "orange",
+        "dos_answer": "violet",
+        "member": "blue",
+        "member_answer": "green",
+        "member_number": "blue",
+        "member_number_answer": "green",
+        "member_name": "blue",
+        "member_name_answer": "green",
+        "patient_name": "blue",
+        "patient_name_answer": "green",
+        "paragraph": "purple",
+        "greeting": "blue",
+        "address": "orange",
+        "question": "blue",
+        "answer": "aqua",
+        "document_control": "grey",
+        "header": "brown",
+        "letter_date": "deeppink",
+        "url": "darkorange",
+        "phone": "darkmagenta",
+        "other": "red",
+
+        "claim_number": "darkmagenta",
+        "claim_number_answer": "green",
+        "birthdate": "green",
+        "birthdate_answer": "red",
+        "billed_amt": "green",
+        "billed_amt_answer": "orange",
+        "paid_amt": "green",
+        "paid_amt_answer": "blue",
+        "check_amt": "orange",
+        "check_amt_answer": "darkmagenta",
+        "check_number": "orange",
+        "check_number_answer": "blue",
+        "check_date": "orange",
+        "check_date_answer": "blue",
+        "company": "orange",
+        "stamp": "blue",
+        "provider": "red",
+        "provider_answer": "green",
+        "identifier": "green",
+        'footer': 'brown',
+        "date": "green",
+        "money": "orange",
+        "list": "blue",
+        "proc_code": "green",
+        "proc_code_answer": "blue",
+        '' : "red",
+    }
