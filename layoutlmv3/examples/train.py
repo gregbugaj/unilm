@@ -36,8 +36,6 @@ from transformers import LayoutLMv3ForTokenClassification
 
 from transformers import TrainingArguments, Trainer
 from transformers import TrainingArguments
-# from layoutlmft.trainers import FunsdTrainer as Trainer
-
 from transformers.data.data_collator import default_data_collator
 
 
@@ -46,11 +44,13 @@ device = torch.device('cuda:0' if use_cuda else 'cpu')
 print(device)
 device_ids = [0]
 
+
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
 # os.environ['TRANSFORMERS_CACHE'] = '/tmp/cache/'
 print(transformers.__version__)
 
-dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/mnt/data/cache")
+dataset = load_dataset("funsd_dataset/funsd_dataset.py", cache_dir="/data/cache")
 
 # print(dataset['train'].features)
 print(dataset['train'].features['bboxes'])
@@ -67,6 +67,7 @@ print("ID2Label : ")
 print(id2label)
 print(label2id)
 
+
 if False:
     example = dataset["train"][0]
     # example["image"].show()
@@ -80,7 +81,7 @@ if False:
 # processor = AutoProcessor.from_pretrained("microsoft/layoutlmv3-base", apply_ocr=False)
 
 model_name_or_path = "microsoft/layoutlmv3-large"
-# model_name_or_path = "microsoft/layoutlmv3-base"
+model_name_or_path = "microsoft/layoutlmv3-base"
 
 config = AutoConfig.from_pretrained (
     model_name_or_path,
@@ -235,20 +236,41 @@ model = LayoutLMv3ForTokenClassification.from_pretrained(
     config=config,
 )
 
+training_argsXXX = TrainingArguments(
+                num_train_epochs = 25,
+                max_steps=50000,
+                save_steps = 2000,
+                per_device_train_batch_size=16,
+                per_device_eval_batch_size=12,
+                learning_rate=4e-5,
+                evaluation_strategy="steps",
+                eval_steps=2000,
+                load_best_model_at_end=True,                  
+                greater_is_better=True, 
+                do_train=True, 
+                do_eval=True,
+                metric_for_best_model="f1",
+                output_dir="/data/models/layoutlmv3-base-20230711-stride128",
+                # resume_from_checkpoint="/data/models/layoutlmv3-large-20230711-stride128/checkpoint-1000/",
+                fp16=True,
+            )
+
 training_args = TrainingArguments(
-                  max_steps=10000,
-                  save_steps = 1000,
-                  per_device_train_batch_size=4,
-                  per_device_eval_batch_size=1,
-                  learning_rate=5e-5,
-                  evaluation_strategy="steps",
-                  eval_steps=1000,
-                  load_best_model_at_end=True,
-                  metric_for_best_model="f1",
-                  output_dir="/mnt/data/models/layoutlmv3-base-stride",
-                  resume_from_checkpoint="/mnt/data/models/layoutlmv3-base-stride/checkpoint-6000",
-                  fp16=True,
-                )
+                num_train_epochs = 50,
+                per_device_train_batch_size=16,
+                per_device_eval_batch_size=16,
+                learning_rate=2e-5,
+                weight_decay=0.01,
+                evaluation_strategy="epoch",
+                save_strategy="epoch",
+                load_best_model_at_end=True,                  
+                greater_is_better=True, 
+                metric_for_best_model="f1",
+                output_dir="/data/models/layoutlmv3-base-20230711-stride128",
+                # resume_from_checkpoint="/data/models/layoutlmv3-large-20230711-stride128/checkpoint-1000/",
+                fp16=True,
+            )
+
 
 print('training_args *************************')
 print(training_args)
@@ -411,3 +433,6 @@ for word, box, label in zip(example['tokens'], example['bboxes'], example['ner_t
 image.save("/tmp/tensors/real.png")
 
 
+
+# REF :
+# https://github.com/rossumai/docile/blob/ffc139e8e37505121c4b49243011ceed18653650/baselines/NER/docile_train_NER_multilabel_layoutLMv3.py#L23

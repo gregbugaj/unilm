@@ -71,7 +71,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.8.0"), description="FUNSD like dataset, corr-indexing"),
+        FunsdConfig(name="funsd", version=datasets.Version("3.0.0"), description="FUNSD like dataset, corr-indexing"),
     ]
 
     def _info(self):
@@ -134,6 +134,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-PROVIDER_ANSWER', 'I-PROVIDER_ANSWER',
                                 'B-MONEY', 'I-MONEY',
                                 'B-COMPANY', 'I-COMPANY',
+                                'B-STAMP', 'I-STAMP',
                             ]
                         )
                     ),
@@ -150,18 +151,18 @@ class Funsd(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
-        downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+        downloaded_file = "/data/dataset/private/corr-indexer/ready"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
-        downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
-        downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
+        # downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
 
         return [
             datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
+                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/train/"}
             ),
             datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
+                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/test/"}
             ),
         ]
 
@@ -242,16 +243,16 @@ class Funsd(datasets.GeneratorBasedBuilder):
             # by default: --segment_level_layout 1
             # if do not want to use segment_level_layout, comment the following line
             if len(cur_line_bboxes) == 0:
-                print(f"Empty cur_line_bboxes for {words} : {file_path}")
+                # print(f"Empty cur_line_bboxes for {words} : {file_path}")
                 continue
                 
-            cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
+            # cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
             bboxes.extend(cur_line_bboxes)
 
 
         if len(bboxes) == 0:
-            payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
-            print(f"Empty Boxes for : {file_path}")
+            # payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
+            # print(f"Empty Boxes for : {file_path}")
             return 
 
         return guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
@@ -267,8 +268,36 @@ class Funsd(datasets.GeneratorBasedBuilder):
         items = sorted(os.listdir(ann_dir))
         np.random.shuffle(items)
 
+        stop = int(len(items) *.10)
+        stop = int(len(items))
+        # stop = 10000
+
+        print(f"Total files: {len(items)}")
+        # os.exit(0)
+        
+        # https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
+        self.filepath = filepath
+        for guid, file in enumerate(items):
+            if guid == stop:
+                break
+            file_path = os.path.join(ann_dir, file)
+            yield self._generate_(guid, file)
+            
+
+    def _generate_examples_THREADED(self, filepath):
+        logger.info("⏳ Generating examples from = %s", filepath)
+        ann_dir = os.path.join(filepath, "annotations")
+        img_dir = os.path.join(filepath, "images")
+
+        args = []
+        items = sorted(os.listdir(ann_dir))
+        np.random.shuffle(items)
+
         stop = int(len(items) *.50)
         stop = int(len(items))
+
+        print(f"Total files: {len(items)}")
+        os.exit(0)
         
         # https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
         self.filepath = filepath
