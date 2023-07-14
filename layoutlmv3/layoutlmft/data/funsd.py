@@ -36,6 +36,15 @@ def normalize_bbox(bbox, size):
         int(1000 * bbox[3] / size[1]),
     ]
 
+def unnormalize_box(bbox, width, height):
+    return [
+        width * (bbox[0] / 1000),
+        height * (bbox[1] / 1000),
+        width * (bbox[2] / 1000),
+        height * (bbox[3] / 1000),
+    ]
+
+
 logger = datasets.logging.get_logger(__name__)
 
 
@@ -71,7 +80,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
     """Conll2003 dataset."""
 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("1.8.0"), description="FUNSD like dataset, corr-indexing"),
+        FunsdConfig(name="funsd", version=datasets.Version("3.0.1"), description="FUNSD like dataset, corr-indexing"),
     ]
 
     def _info(self):
@@ -134,12 +143,12 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-PROVIDER_ANSWER', 'I-PROVIDER_ANSWER',
                                 'B-MONEY', 'I-MONEY',
                                 'B-COMPANY', 'I-COMPANY',
+                                'B-STAMP', 'I-STAMP',
                             ]
                         )
                     ),
 
                     "image": datasets.features.Image(),
-                    # "image": datasets.Array3D(shape=(3, 224, 224), dtype="uint8"),
                     "image_path": datasets.Value("string"),
                 }
             ),
@@ -152,18 +161,17 @@ class Funsd(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
-        downloaded_file = "/data/dataset/private/corr-indexer-augmented"
+        downloaded_file = "/data/dataset/private/corr-indexer/ready"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
-        downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
+        # downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
         downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
-
         return [
             datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/dataset/training_data/"}
+                name=datasets.Split.TRAIN, gen_kwargs={"filepath": f"{downloaded_file}/train/"}
             ),
             datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/dataset/testing_data/"}
+                name=datasets.Split.TEST, gen_kwargs={"filepath": f"{downloaded_file}/test/"}
             ),
         ]
 
@@ -244,16 +252,16 @@ class Funsd(datasets.GeneratorBasedBuilder):
             # by default: --segment_level_layout 1
             # if do not want to use segment_level_layout, comment the following line
             if len(cur_line_bboxes) == 0:
-                print(f"Empty cur_line_bboxes for {words} : {file_path}")
+                # print(f"Empty cur_line_bboxes for {words} : {file_path}")
                 continue
                 
-            cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
+            # cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
             bboxes.extend(cur_line_bboxes)
 
 
         if len(bboxes) == 0:
-            payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
-            print(f"Empty Boxes for : {file_path}")
+            # payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
+            # print(f"Empty Boxes for : {file_path}")
             return 
 
         return guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
@@ -269,8 +277,81 @@ class Funsd(datasets.GeneratorBasedBuilder):
         items = sorted(os.listdir(ann_dir))
         np.random.shuffle(items)
 
+        stop = int(len(items) *.10)
+        stop = int(len(items))
+        # stop = 10000
+
+        print(f"Total files: {len(items)}")
+        # os.exit(0)
+        
+        # https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
+        self.filepath = filepath
+        for guid, file in enumerate(items):
+            if guid == stop:
+                break
+            file_path = os.path.join(ann_dir, file)
+            res = self._generate_(guid, file)
+            print(f"Processed: {guid} : {file_path}")
+            
+            self.visualize(res)
+
+            yield res   
+            
+    def visualize(self, results):
+        guid, data = results
+
+        import cv2
+        
+        image = data["image"]
+        bboxes = data["bboxes"]
+        ner_tags = data["ner_tags"]
+        tokens = data["tokens"]
+        guid = data["id"]
+
+        image = image.convert("RGB").copy()
+        draw = ImageDraw.Draw(image)
+        width, height = image.size
+        font = ImageFont.load_default()
+
+        def iob_to_label(label):
+            label = label[2:]
+            if not label:
+                return 'other'
+            return label
+
+
+        for word, box, label in zip(tokens, bboxes, ner_tags):
+            # actual_label = iob_to_label(id2label[label]).lower()
+            actual_label = label[2:].lower()
+            box = unnormalize_box(box, width, height)
+
+            draw.rectangle(box, outline=label2color[actual_label], width=2)
+            draw.text((box[0] + 10, box[1] - 10), actual_label, fill=label2color[actual_label], font=font)
+
+        image.save(f"/tmp/ner/{guid}.png")
+
+        
+        # for bbox, ner_tag, token in zip(bboxes, ner_tags, tokens):
+        #     x0, y0, x1, y1 = bbox
+        #     cv2.rectangle(img, (x0, y0), (x1, y1), (0, 255, 0), 2)
+        #     cv2.putText(img, f"{token} {ner_tag}", (x0, y0), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+
+        
+
+    def _generate_examples_THREADED(self, filepath):
+        logger.info("⏳ Generating examples from = %s", filepath)
+        ann_dir = os.path.join(filepath, "annotations")
+        img_dir = os.path.join(filepath, "images")
+
+        args = []
+        items = sorted(os.listdir(ann_dir))
+        np.random.shuffle(items)
+
         stop = int(len(items) *.50)
         stop = int(len(items))
+
+        print(f"Total files: {len(items)}")
+        os.exit(0)
         
         # https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
         self.filepath = filepath
@@ -299,4 +380,56 @@ class Funsd(datasets.GeneratorBasedBuilder):
             # print("Time elapsed[result]: %s  , %s" % (time.time() - start, r))
             yield r
 
-        print("Time elapsed[all]: %s" % (time.time() - start))                         
+
+label2color = {
+        "pan": "blue",
+        "pan_answer": "green",
+        "dos": "orange",
+        "dos_answer": "violet",
+        "member": "blue",
+        "member_answer": "green",
+        "member_number": "blue",
+        "member_number_answer": "green",
+        "member_name": "blue",
+        "member_name_answer": "green",
+        "patient_name": "blue",
+        "patient_name_answer": "green",
+        "paragraph": "purple",
+        "greeting": "blue",
+        "address": "orange",
+        "question": "blue",
+        "answer": "aqua",
+        "document_control": "grey",
+        "header": "brown",
+        "letter_date": "deeppink",
+        "url": "darkorange",
+        "phone": "darkmagenta",
+        "other": "red",
+
+        "claim_number": "darkmagenta",
+        "claim_number_answer": "green",
+        "birthdate": "green",
+        "birthdate_answer": "red",
+        "billed_amt": "green",
+        "billed_amt_answer": "orange",
+        "paid_amt": "green",
+        "paid_amt_answer": "blue",
+        "check_amt": "orange",
+        "check_amt_answer": "darkmagenta",
+        "check_number": "orange",
+        "check_number_answer": "blue",
+        "check_date": "orange",
+        "check_date_answer": "blue",
+        "company": "orange",
+        "stamp": "blue",
+        "provider": "red",
+        "provider_answer": "green",
+        "identifier": "green",
+        'footer': 'brown',
+        "date": "green",
+        "money": "orange",
+        "list": "blue",
+        "proc_code": "green",
+        "proc_code_answer": "blue",
+        '' : "red",
+    }

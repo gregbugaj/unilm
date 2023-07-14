@@ -8,6 +8,7 @@ from typing import Optional
 
 import numpy as np
 from datasets import ClassLabel, load_dataset, load_metric
+from datasets import Features, Sequence, ClassLabel, Value, Array2D, Array3D
 
 import transformers
 
@@ -22,6 +23,16 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
+
+from transformers import (
+    LayoutLMv3Processor,
+    LayoutLMv3FeatureExtractor,
+    LayoutLMv3ForTokenClassification,
+    LayoutLMv3TokenizerFast,
+)
+
+from PIL import Image
+
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
 from transformers.utils import check_min_version
 
@@ -35,6 +46,7 @@ from timm.data.constants import \
     IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_INCEPTION_MEAN, IMAGENET_INCEPTION_STD
 from torchvision import transforms
 import torch
+
 
 @dataclass
 class ModelArguments:
@@ -219,6 +231,7 @@ def main():
         column_names = datasets["test"].column_names
         features = datasets["test"].features
 
+
     text_column_name = "words" if "words" in column_names else "tokens"
 
     label_column_name = (
@@ -259,7 +272,11 @@ def main():
         revision=model_args.model_revision,
         input_size=data_args.input_size,
         use_auth_token=True if model_args.use_auth_token else None,
+        # hidden_dropout_prob = .3,
+        # attention_probs_dropout_prob = .2,
     )
+
+    # AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         tokenizer_file=None,  # avoid loading from a cached file of the pre-trained model in another machine
@@ -269,7 +286,8 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
-    model = AutoModelForTokenClassification.from_pretrained(
+
+    model = LayoutLMv3ForTokenClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
@@ -278,6 +296,13 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
+    # feature_extractor = LayoutLMv3FeatureExtractor(apply_ocr=False)
+    # tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base")  # microsoft/layoutlmv2-base-uncased
+    # processor = LayoutLMv3Processor(feature_extractor=feature_extractor, tokenizer=tokenizer)
+
+    # print(config)
+    # print(tokenizer)
+    
     # Tokenizer check: this script requires a fast tokenizer.
     if not isinstance(tokenizer, PreTrainedTokenizerFast):
         raise ValueError(
@@ -310,26 +335,26 @@ def main():
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples, augmentation=False):
-        images = examples["image"]
-        words = examples["tokens"]
-        boxes = examples["bboxes"]
-        word_labels = examples["ner_tags"]
-        
+        words = examples[text_column_name]
+        boxes = examples[boxes_column_name]
+        word_labels = examples[label_column_name]
+
+        # is_split_into_words = True   is_pretokenized = True
         tokenized_inputs = tokenizer(
-            text = words,
-            boxes= boxes,
+            words,
+            boxes=boxes, 
             word_labels=word_labels,
             padding=False,
             truncation=True,
             return_overflowing_tokens=True,
-            stride = 128,
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
-            # is_split_into_words=True,
+            # is_split_into_words=True, #TODO : This is not working, possible bug in Tokenizer
         )
 
         labels = []
         bboxes = []
         images = []
+
         for batch_index in range(len(tokenized_inputs["input_ids"])):
             word_ids = tokenized_inputs.word_ids(batch_index=batch_index)
             org_batch_index = tokenized_inputs["overflow_to_sample_mapping"][batch_index]
@@ -372,19 +397,46 @@ def main():
 
         return tokenized_inputs
 
+    data_args.preprocessing_num_workers = 8
+
+    image_column_name = "image"
+    text_column_name = "tokens"
+    boxes_column_name = "bboxes"
+    label_column_name = "ner_tags"
+
+    def prepare_examples(examples):
+        images = examples[image_column_name]
+        # images = [Image.open(path).convert("RGB") for path in examples['image_path']]
+        words = examples[text_column_name]
+        boxes = examples[boxes_column_name]
+        word_labels = examples[label_column_name]
+
+        encoding = processor(images, words, boxes=boxes, word_labels=word_labels,
+                            truncation=True, padding="max_length")
+
+        return encoding
+
     if training_args.do_train:
         if "train" not in datasets:
             raise ValueError("--do_train requires a train dataset")
         train_dataset = datasets["train"]
         if data_args.max_train_samples is not None:
             train_dataset = train_dataset.select(range(data_args.max_train_samples))
-        train_dataset = train_dataset.map(
-            tokenize_and_align_labels,
-            batched=True,
-            remove_columns=remove_columns,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
-        )
+
+
+        if False:
+            train_dataset = train_dataset.map(prepare_examples, batched=True, remove_columns=train_dataset.column_names,
+                                          features=features, num_proc=data_args.preprocessing_num_workers, 
+                                           load_from_cache_file=not data_args.overwrite_cache)
+
+        if True:
+            train_dataset = train_dataset.map(
+                tokenize_and_align_labels,
+                batched=True,
+                remove_columns=remove_columns,
+                num_proc=data_args.preprocessing_num_workers,
+                load_from_cache_file=not data_args.overwrite_cache,
+            )
 
     if training_args.do_eval:
         validation_name = "test"
@@ -393,13 +445,20 @@ def main():
         eval_dataset = datasets[validation_name]
         if data_args.max_val_samples is not None:
             eval_dataset = eval_dataset.select(range(data_args.max_val_samples))
-        eval_dataset = eval_dataset.map(
-            tokenize_and_align_labels,
-            batched=True,
-            remove_columns=remove_columns,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
-        )
+
+        if False:
+            eval_dataset = eval_dataset.map(prepare_examples, batched=True, remove_columns=remove_columns,
+                                        features=features, num_proc=data_args.preprocessing_num_workers, 
+                                        load_from_cache_file=not data_args.overwrite_cache)
+
+        if True:
+            eval_dataset = eval_dataset.map(
+                tokenize_and_align_labels,
+                batched=True,
+                remove_columns=remove_columns,
+                num_proc=data_args.preprocessing_num_workers,
+                load_from_cache_file=not data_args.overwrite_cache,
+            )
 
     if training_args.do_predict:
         if "test" not in datasets:
@@ -407,6 +466,8 @@ def main():
         test_dataset = datasets["test"]
         if data_args.max_test_samples is not None:
             test_dataset = test_dataset.select(range(data_args.max_test_samples))
+
+            
         test_dataset = test_dataset.map(
             tokenize_and_align_labels,
             batched=True,
@@ -530,7 +591,6 @@ def _mp_fn(index):
 if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"  # To avoid warnings about parallelism in tokenizers
     os.environ['TRANSFORMERS_CACHE'] = '/data/cache/'
-
     print(transformers.__version__)
-
+    
     main()
