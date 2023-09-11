@@ -1,4 +1,5 @@
 import argparse
+import glob
 import logging
 import os
 import sys
@@ -29,6 +30,7 @@ def setup_cfg(args):
 
     # set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
     cfg.MODEL.DEVICE = device
 
     cfg.freeze()
@@ -49,6 +51,40 @@ def build_model_from_config(cfg):
     logger.info("Model:\n{}".format(model))
     return model
 
+
+def process_dir(predictor: DefaultPredictor, image_dir: str):
+    for idx, img_path in enumerate(glob.glob(os.path.join(image_dir, "*.png"))):
+        try:
+            print(img_path)
+            inference(predictor, img_path)
+        except Exception as e:
+            print(e)
+            # raise e
+
+def inference(predictor:DefaultPredictor, image_path: str):
+
+    img = cv2.imread(image_path)
+    output = predictor(img)["instances"]
+    md=None
+
+    # print(output)
+
+    v = Visualizer(img[:, :, ::-1],
+                    md,
+                    scale=1.0,
+                    instance_mode=ColorMode.SEGMENTATION)
+    result = v.draw_instance_predictions(output.to("cpu"))
+    result_image = result.get_image()[:, :, ::-1]
+
+
+    filename = os.path.basename(image_path)    
+    filename = os.path.splitext(filename)[0]
+
+    output_filename = f"/tmp/dit/result_{filename}.png"
+    print(output_filename)
+    cv2.imwrite(output_filename, result_image)
+
+
 def main(args):
     print("Inference")
     # Step 1: instantiate config
@@ -58,28 +94,30 @@ def main(args):
     # Step 4: define model
     predictor = DefaultPredictor(cfg)
 
+    if args.image_path is None:
+        print("No image path provided")
+        return
+    
+    # check if image path is a directory or a file
     # Step 5: run inference
-    img = cv2.imread(args.image_path)
-    print(img)
-    output = predictor(img)["instances"]
-    md=None
 
-    print(output)
-
-    v = Visualizer(img[:, :, ::-1],
-                    md,
-                    scale=1.0,
-                    instance_mode=ColorMode.SEGMENTATION)
-    result = v.draw_instance_predictions(output.to("cpu"))
-    result_image = result.get_image()[:, :, ::-1]
-
-    # # step 6: save
-    cv2.imwrite("/tmp/dit/result.png", result_image)
+    if os.path.isdir(args.image_path):
+        print("Image path is a directory")
+        process_dir(predictor, args.image_path)
+    else:
+        print("Image path is a file")
+        inference(predictor, args.image_path)
+    
     # cv2.imwrite(args.output_file_name, result_image)
 
 
 ### Sample usage
 ###  python ./inference.py --config-file configs/mask_rcnn_dit_base.yaml  --image_path /home/gbugaj/tmp/2022-08-09/PID_1549_8460_0_159274481.tif --output_path /tmp/dit --opts  MODEL.WEIGHTS /home/gbugaj/models/unilm/dit/text_detection/td-syn_dit-b_mrcnn.pth
+
+### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/greg/tmp/marie-cleaner/to-clean-001/burst/00001.tif --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth
+
+### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/greg/datasets/private/medprov/PID/150300411/burst  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth
+
 
 def get_parser():
     parser = argparse.ArgumentParser(description="DIT TextBlock inference script")
