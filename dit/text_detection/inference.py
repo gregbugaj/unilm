@@ -30,7 +30,7 @@ def setup_cfg(args):
 
     # set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # device = "cpu"
+    device = "cpu"
     cfg.MODEL.DEVICE = device
 
     cfg.freeze()
