@@ -16,6 +16,44 @@ from detectron2.data.datasets import register_coco_instances
 
 from ditod import MyTrainer, add_vit_config
 
+from distutils.util import strtobool as strtobool
+import warnings as _warnings
+import os as _os
+
+if strtobool(_os.environ.get("SUPPRESS_WARNINGS", "true")):
+    # attempt to suppress all warnings from dependencies
+
+    _warnings.simplefilter(action="ignore", category=FutureWarning)
+    _warnings.simplefilter(action="ignore", category=UserWarning)
+    _warnings.simplefilter(action="ignore", category=DeprecationWarning)
+
+    # # Compiled functions can't take variable number of arguments or use keyword-only arguments with defaults
+    try:
+
+        def warn(*args, **kwargs):
+            pass
+
+        # _warnings.warn = warn
+
+        # Work around for https://github.com/pytorch/pytorch/issues/29637
+        # We will owerwrite the formatting function for warnings to make it not print anything
+    except Exception as ex:
+        pass
+else:
+
+    def _warning_on_one_line(message, category, filename, lineno, *args, **kwargs):
+        return "\033[1;33m%s: %s\033[0m \033[1;30m(raised from %s:%s)\033[0m\n" % (
+            category.__name__,
+            message,
+            filename,
+            lineno,
+        )
+
+    _warnings.formatwarning = _warning_on_one_line
+    _warnings.simplefilter("always", DeprecationWarning)
+
+
+
 def setup(args):
     """
     Create configs and perform basic setups.
@@ -65,7 +103,7 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true", help="enable debug mode")
     args = parser.parse_args()
     print("Command Line Args:", args)
-
+    
     if args.debug:
         import debugpy
 

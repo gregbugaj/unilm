@@ -1,12 +1,12 @@
 <!--# Large-scale Self-supervised Pre-training Across Tasks, Languages, and Modalities-->
 ## [aka.ms/GeneralAI](https://aka.ms/GeneralAI)
 # Hiring
-We are hiring at all levels (including FTE researchers and interns)! If you are interested in working with us on Foundation Models (aka large-scale pre-trained models) and AGI, NLP, MT, Speech, Document AI and Multimodal AI, please send your resume to <a href="mailto:fuwei@microsoft.com" class="x-hidden-focus">fuwei@microsoft.com</a>.
+We are hiring at all levels (including FTE researchers and interns)! If you are interested in working with us on Foundation Models (aka large-scale pre-trained models) and General AI, NLP, MT, Speech, Document AI and Multimodal AI, please send your resume to <a href="mailto:fuwei@microsoft.com" class="x-hidden-focus">fuwei@microsoft.com</a>.
 
-## Foundation Architecture
+# Foundation Architecture
 ### TorchScale - Transformers at (any) Scale ([repo](https://github.com/microsoft/torchscale))
 
-Fundamental research to develop new architectures for foundation models and A(G)I, focusing on modeling generality and capability, as well as training stability and efficiency.
+Fundamental research to develop new architectures for foundation models and AI, focusing on modeling generality and capability, as well as training stability and efficiency.
 
 > Stability - [**DeepNet**](https://github.com/microsoft/unilm/tree/master/deepnet): scaling Transformers to 1,000 Layers and beyond
 
@@ -16,15 +16,21 @@ Fundamental research to develop new architectures for foundation models and A(G)
 
 > Efficiency & Transferability - [**X-MoE**](https://github.com/microsoft/unilm/tree/master/xmoe): scalable & finetunable sparse Mixture-of-Experts (MoE)
 
-## Foundation Models
+### Revolutionizing Transformers for (M)LLMs and AI
 
-### General-purpose Foundation Model
-> [**MetaLM**](https://github.com/microsoft/unilm/tree/master/metalm): **Language Models are General-Purpose Interfaces**
+> [**RetNet**](https://arxiv.org/abs/2307.08621): Retentive Network: A Successor to Transformer for Large Language Models
 
+> [**LongNet**](https://arxiv.org/abs/2307.02486): Scaling Transformers to 1,000,000,000 Tokens
+
+# Foundation Models
 
 ### LLM / MLLM (Multimodal LLM)
+
+> [**Kosmos-2**](https://github.com/microsoft/unilm/tree/master/kosmos-2): **Grounding Multimodal Large Language Models to the World**
+
 > [**Kosmos-1**](https://arxiv.org/abs/2302.14045): **A Multimodal Large Language Model (MLLM)**
 
+> [**MetaLM**](https://github.com/microsoft/unilm/tree/master/metalm): **Language Models are General-Purpose Interfaces**
 
 **The Big Convergence** - Large-scale self-supervised pre-training across ```tasks``` (predictive and generative), ```languages``` (100+ languages), and ```modalities``` (language, image, audio, layout/format + language, vision + language, audio + language, etc.)
 

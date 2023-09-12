@@ -56,7 +56,14 @@ python coco_funds_converter.py
 ## Training
 
 ```shell 
-python train_net.py --config-file configs/mask_rcnn_dit_base.yaml --num-gpus 1 --resume MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/funsd_dit-b_mrcnn.pth  OUTPUT_DIR /tmp/dit/tuned.pth SOLVER.IMS_PER_BATCH 4
+
+python train_net.py --config-file configs/mask_rcnn_dit_base.yaml --num-gpus 1 --resume MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-b_mrcnn.pth  OUTPUT_DIR /home/greg/tmp/models/dit_text_detection/tuned.pth SOLVER.IMS_PER_BATCH 2
+
+
+python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR /home/greg/tmp/models/dit_text_detection/tuned-2500-LARGE SOLVER.IMS_PER_BATCH 1
+
 ```
 
+## update the co
 
+python ./coco_funsd_dit_converter.py  --coco_annoations_file ./data/instances_training.json 
