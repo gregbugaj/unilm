@@ -53,7 +53,10 @@ def build_model_from_config(cfg):
 
 
 def process_dir(predictor: DefaultPredictor, image_dir: str):
-    for idx, img_path in enumerate(glob.glob(os.path.join(image_dir, "*.png"))):
+    for idx, img_path in enumerate(glob.glob(os.path.join(image_dir, "*.*"))):
+        if not img_path.endswith((".jpg", ".png", ".jpeg", ".tif", ".tiff")):
+            continue
+
         try:
             print(img_path)
             inference(predictor, img_path)
