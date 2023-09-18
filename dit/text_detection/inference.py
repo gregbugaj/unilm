@@ -6,6 +6,12 @@ import sys
 import torch
 import cv2
 
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+from PIL import Image
+from docarray import DocumentArray
+from torch.nn import Module
 from ditod import add_vit_config
 
 from detectron2.utils.visualizer import ColorMode, Visualizer
@@ -17,6 +23,8 @@ from detectron2.engine import DefaultPredictor
 from ditod import MyTrainer, add_vit_config
 
 import argparse
+
+logger = logging.getLogger(__name__)
 
 def setup_cfg(args):
     """
@@ -30,12 +38,33 @@ def setup_cfg(args):
 
     # set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    device = "cpu"
+    # device = "cpu"
     cfg.MODEL.DEVICE = device
 
     cfg.freeze()
     # default_setup(cfg, args)
     return cfg
+
+def optimize_model(model):
+    """Optimizes the model for inference. This method is called by the __init__ method."""
+    try:
+        import torchvision.models as models
+        import torch._dynamo as dynamo
+
+        # ['aot_eager', 'aot_eager_decomp_partition', 'aot_torchxla_trace_once', 'aot_torchxla_trivial', 'aot_ts', 'aot_ts_nvfuser', 'cudagraphs', 'dynamo_accuracy_minifier_backend', 'dynamo_minifier_backend', 'eager', 'inductor', 'ipex', 'nvprims_aten', 'nvprims_nvfuser', 'onnxrt', 'torchxla_trace_once', 'torchxla_trivial', 'ts', 'tvm']
+        torch._dynamo.config.verbose = False
+        torch._dynamo.config.suppress_errors = True
+        # torch.backends.cudnn.benchmark = True
+        # https://dev-discuss.pytorch.org/t/torchinductor-update-4-cpu-backend-started-to-show-promising-performance-boost/874
+        # ipex
+        model = torch.compile(model)
+           
+        # model = torch.compile(model, backend="onnxrt", fullgraph=False)
+        # model = torch.compile(model)
+        return model
+    except Exception as err:
+        logger.warning(f"Model compile not supported: {err}")
+        raise err
 
 
 def build_model_from_config(cfg):
@@ -47,13 +76,17 @@ def build_model_from_config(cfg):
     Overwrite it if you'd like a different model.
     """
     model = build_model(cfg)
-    logger = logging.getLogger(__name__)
     logger.info("Model:\n{}".format(model))
-    return model
+
+    return optimize_model(model)
+    # return model
 
 
 def process_dir(predictor: DefaultPredictor, image_dir: str):
-    for idx, img_path in enumerate(glob.glob(os.path.join(image_dir, "*.png"))):
+    for idx, img_path in enumerate(glob.glob(os.path.join(image_dir, "*.*"))):
+        if not img_path.endswith((".jpg", ".png", ".jpeg", ".tif", ".tiff")):
+            continue
+
         try:
             print(img_path)
             inference(predictor, img_path)
