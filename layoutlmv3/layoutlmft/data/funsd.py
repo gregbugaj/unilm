@@ -79,8 +79,9 @@ class FunsdConfig(datasets.BuilderConfig):
 class Funsd(datasets.GeneratorBasedBuilder):
     """Conll2003 dataset."""
 
+    # 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="funsd", version=datasets.Version("3.0.1"), description="FUNSD like dataset, corr-indexing"),
+        FunsdConfig(name="funsd", version=datasets.Version("3.0.4"), description="FUNSD like dataset, corr-indexing"),
     ]
 
     def _info(self):
@@ -113,9 +114,9 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-PAN_ANSWER', 'I-PAN_ANSWER',
                                 'B-ADDRESS', 'I-ADDRESS',
                                 'B-GREETING', 'I-GREETING',
-                                'B-HEADER', 'I-HEADER',
+                                # 'B-HEADER', 'I-HEADER',
                                 'B-LETTER_DATE', 'I-LETTER_DATE',
-                                'B-PARAGRAPH', 'I-PARAGRAPH',
+                                # 'B-PARAGRAPH', 'I-PARAGRAPH',
                                 'B-QUESTION', 'I-QUESTION',
                                 'B-ANSWER', 'I-ANSWER',
                                 'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
@@ -133,8 +134,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-CHECK_AMT_ANSWER', 'I-CHECK_AMT_ANSWER',
                                 'B-CHECK_NUMBER', 'I-CHECK_NUMBER',
                                 'B-CHECK_NUMBER_ANSWER', 'I-CHECK_NUMBER_ANSWER',
-                                'B-LIST', 'I-LIST',
-                                'B-FOOTER', 'I-FOOTER',
+                                # 'B-LIST', 'I-LIST',
+                                # 'B-FOOTER', 'I-FOOTER',
                                 'B-DATE', 'I-DATE',
                                 'B-IDENTIFIER', 'I-IDENTIFIER',
                                 'B-PROC_CODE', 'I-PROC_CODE',
@@ -164,7 +165,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
         downloaded_file = "/data/dataset/private/corr-indexer/ready"
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
-        downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
+        # downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/dataset/private/corr-indexer-augmented"
         return [
             datasets.SplitGenerator(
@@ -230,7 +231,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
             if len(words) == 0:
                 continue
 
-            if label == "other":
+            if label == "other" or label == "paragraph" or label == "list" or label == "footer" or label == "header":
                 for w in words:
                     # TODO: How did we endup with O-Token with size of [0,0,W,H]
                     other_box  = normalize_bbox(w["box"], size)
@@ -262,7 +263,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
         if len(bboxes) == 0:
             # payload = {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags}
             # print(f"Empty Boxes for : {file_path}")
-            return 
+            return None, None
 
         return guid, {"id": str(guid), "tokens": tokens, "bboxes": bboxes, "ner_tags": ner_tags,
                         "image": image, "image_path": image_path}
@@ -278,8 +279,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
         np.random.shuffle(items)
 
         stop = int(len(items) *.10)
-        stop = int(len(items))
-        # stop = 10000
+        # stop = int(len(items))
+        # stop = 2000
 
         print(f"Total files: {len(items)}")
         # os.exit(0)
@@ -291,10 +292,12 @@ class Funsd(datasets.GeneratorBasedBuilder):
                 break
             file_path = os.path.join(ann_dir, file)
             res = self._generate_(guid, file)
-            print(f"Processed: {guid} : {file_path}")
-            
-            self.visualize(res)
 
+            if res is None:
+                continue
+
+            # print(f"Processed: {guid} : {file_path}")
+            # self.visualize(res)
             yield res   
             
     def visualize(self, results):
