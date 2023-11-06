@@ -86,7 +86,6 @@ def process_dir(predictor: DefaultPredictor, image_dir: str):
     for idx, img_path in enumerate(glob.glob(os.path.join(image_dir, "*.*"))):
         if not img_path.endswith((".jpg", ".png", ".jpeg", ".tif", ".tiff")):
             continue
-
         try:
             print(img_path)
             inference(predictor, img_path)
@@ -95,7 +94,7 @@ def process_dir(predictor: DefaultPredictor, image_dir: str):
             # raise e
 
 def inference(predictor:DefaultPredictor, image_path: str):
-
+    print(f"Inference on image: {image_path}")
     img = cv2.imread(image_path)
     output = predictor(img)["instances"]
     md=None
@@ -131,8 +130,10 @@ def main(args):
         print("No image path provided")
         return
     
+    args.image_path = os.path.expanduser(args.image_path)
     # check if image path is a directory or a file
     # Step 5: run inference
+    print(f"Starting inference on {args.image_path}")
 
     if os.path.isdir(args.image_path):
         print("Image path is a directory")
@@ -186,5 +187,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     main(args)
 
-    
-    

@@ -60,10 +60,35 @@ python coco_funds_converter.py
 python train_net.py --config-file configs/mask_rcnn_dit_base.yaml --num-gpus 1 --resume MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-b_mrcnn.pth  OUTPUT_DIR /home/greg/tmp/models/dit_text_detection/tuned.pth SOLVER.IMS_PER_BATCH 2
 
 
-python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR /home/greg/tmp/models/dit_text_detection/tuned-2500-LARGE SOLVER.IMS_PER_BATCH 1
 
+python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 4 --resume MODEL.WEIGHTS ~/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR ~/models/dit_text_detection/tuned-01 SOLVER.IMS_PER_BATCH 8
+
+
+TRAINS-002
+~/dev/unilm/dit/text_detection$ 
+python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 4 --resume MODEL.WEIGHTS ~/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR ~/models/dit_text_detection/tuned-01 SOLVER.IMS_PER_BATCH 8Connection to 172.83.14.99 closed by remote host.
+
+
+
+python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS ~/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR ~/models/dit_text_detection/tuned-01 SOLVER.IMS_PER_BATCH 3
 ```
 
 ## update the co
 
 python ./coco_funsd_dit_converter.py  --coco_annoations_file ./data/instances_training.json 
+
+
+# Timings
+A100 32GB
+[09/23 03:13:19 d2.evaluation.evaluator]: Total inference time: 0:04:02.963073 (8.378037 s / iter per device, on 4 devices)
+[09/23 03:13:19 d2.evaluation.evaluator]: Total inference pure compute time: 0:00:18 (0.624468 s / iter per device, on 4 devices)
+
+4090 24GB
+[09/22 21:49:22 d2.evaluation.evaluator]: Total inference time: 0:04:25.386144 (2.057257 s / iter per device, on 1 devices)
+[09/22 21:49:22 d2.evaluation.evaluator]: Total inference pure compute time: 0:00:32 (0.253688 s / iter per device, on 1 devices)
+
+
+ rsync -av --progress /home/greg/dev/marieai/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  paperspace@172.83.14.99:/home/paperspace/model_zoo/unilm/dit/text_detection
+
+
+  rsync -av --progress /home/greg/dev/marieai/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  paperspace@172.83.14.99:/home/paperspace/model_zoo/unilm/dit/text_detection

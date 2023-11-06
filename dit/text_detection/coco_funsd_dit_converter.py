@@ -59,7 +59,7 @@ def process_split(coco_annoations_file:str):
 
 
 # https://github.com/facebookresearch/detectron2/issues/485
-def process(coco_annoations_file:str):
+def process(coco_annoations_file:str, output_file:str):
 
     with io.open(coco_annoations_file, "r", encoding="utf-8") as json_file:
         data = json.load(json_file)
@@ -68,11 +68,14 @@ def process(coco_annoations_file:str):
     for i in range(len(data['annotations'])):   
         annotation = data['annotations'][i]
         img_id = data['annotations'][i]['image_id']
-        if "segmentation" in annotation:
-            continue
 
-        x,y,w,h = annotation['bbox']
-        annotation['segmentation'] = [[x,y, x+w,y, x,y+h, x+w,y+h]]
+        x0, y0, w, h = annotation['bbox']
+        x1, y1 = x0 + w, y0 + h
+        polygon = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+        annotation['segmentation'] = polygon
+        # annotation['segmentation'] = [[x,y, x+w,y, x,y+h, x+w,y+h]]
+
+
         annotation['area'] = w*h
     
     # need to loop over images and check if the image has a corresponding annotation entry if not remove it or it will cause an error in the training
@@ -137,10 +140,8 @@ def process(coco_annoations_file:str):
         assert key not in gt.keys()
         gt[key] = id2bbox[val]
 
-    # save the annotations to a new file
-
-    with open(f"/tmp/instances_converted.json", 'w') as outfile:
-        json.dump(data, outfile)
+    with open(output_file, 'w', encoding='utf-8') as f:            
+        json.dump(data, f, indent=2)
 
 
 if __name__ == "__main__":
@@ -151,7 +152,15 @@ if __name__ == "__main__":
         help="Path to the COCO annotations file",
         required=True,
     )
+
+    parser.add_argument(
+        "--output_file",
+        type=str,
+        help="Path to the output file",
+        required=True,
+    )
+    
     args = parser.parse_args()
 
-    process(args.coco_annoations_file)
+    process(args.coco_annoations_file, args.output_file)    
 

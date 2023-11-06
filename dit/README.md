@@ -132,3 +132,7 @@ This repository is built using the [timm](https://github.com/rwightman/pytorch-i
 For help or issues using DiT models, please submit a GitHub issue.
 
 For other communications related to DiT, please contact Lei Cui (`lecu@microsoft.com`), Furu Wei (`fuwei@microsoft.com`).
+
+
+# converted
+https://github.com/open-mmlab/mmocr/blob/main/tools/dataset_converters/textdet/funsd_converter.py
