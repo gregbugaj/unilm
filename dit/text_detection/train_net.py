@@ -63,6 +63,8 @@ def setup(args):
     add_vit_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
+
+    cfg.DATALOADER.NUM_WORKERS = 1  # Torch crashes if we use > 1 workers
     cfg.freeze()
     default_setup(cfg, args)
     return cfg

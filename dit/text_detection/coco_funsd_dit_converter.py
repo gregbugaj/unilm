@@ -1,6 +1,7 @@
 import argparse
 import io
 import json
+import math
 import multiprocessing as mp
 import os
 import numpy as np
@@ -9,53 +10,6 @@ import copy
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import lru_cache
 from multiprocessing import Pool
-
-# https://github.com/facebookresearch/detectron2/issues/485
-def process_split(coco_annoations_file:str):
-
-    with io.open(coco_annoations_file, "r", encoding="utf-8") as json_file:
-        data = json.load(json_file)
-
-    # loop over the annotations and extract the bounding boxes
-    for annotation in data["annotations"]:
-        x,y,w,h = annotation['bbox']
-        annotation['segmentation'] = [[x,y, x+w,y, x,y+h, x+w,y+h]]
-        annotation['area'] = w*h
-
-    # split data inot training and testing sets
-    split_percentage = 0.8
-
-    images = data["images"]
-
-    total_count = len(images)
-    sample_count = int(total_count * split_percentage)
-    print(f"split_percentage = {split_percentage}")
-    print(f"total_count      = {total_count}")
-    print(f"sample_count     = {sample_count}")
-
-    # np.random.shuffle(images)
-
-    train_set = images[0:sample_count]
-    test_set = images[sample_count:]
-
-    print(f"Train size : {len(train_set)}")
-    print(f"Test size : {len(test_set)}")
-
-    # deep copy the data
-    # clone the data
-    
-    train_data = copy.deepcopy(data) 
-    test_data = copy.deepcopy(data) 
-
-    train_data['images'] = train_set
-    test_data['images']  = test_set
-    
-    # save the annotations to a new file
-    with open(f"/tmp/instances_training.json", 'w') as outfile:
-        json.dump(train_data, outfile)
-
-    with open(f"/tmp/instances_test.json", 'w') as outfile:
-        json.dump(test_data, outfile)
 
 
 # https://github.com/facebookresearch/detectron2/issues/485
@@ -66,17 +20,26 @@ def process(coco_annoations_file:str, output_file:str):
 
     # loop over the annotations and ensure that the segmentation node is present and the area is set
     for i in range(len(data['annotations'])):   
-        annotation = data['annotations'][i]
-        img_id = data['annotations'][i]['image_id']
+        ann = data['annotations'][i]
 
-        x0, y0, w, h = annotation['bbox']
-        x1, y1 = x0 + w, y0 + h
-        polygon = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-        annotation['segmentation'] = polygon
-        # annotation['segmentation'] = [[x,y, x+w,y, x,y+h, x+w,y+h]]
+        # Old method
+        if False:
+            x0, y0, w, h = annotation['bbox']
+            x1, y1 = x0 + w, y0 + h
+            polygon = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+            annotation['segmentation'] = polygon
 
-
-        annotation['area'] = w*h
+        # x1, y1, x2, y2 = ann['bbox']
+        # x = max(0, min(math.floor(x1), math.floor(x2)))
+        # y = max(0, min(math.floor(y1), math.floor(y2)))
+        # w, h = math.ceil(abs(x2 - x1)), math.ceil(abs(y2 - y1))
+        x, y, w, h = ann['bbox']
+        bbox = [x, y, w, h]
+        segmentation = [x, y, x + w, y, x + w, y + h, x, y + h]
+        
+        ann['bbox'] = bbox
+        ann['segmentation'] = [segmentation]
+        ann['area'] = w * h
     
     # need to loop over images and check if the image has a corresponding annotation entry if not remove it or it will cause an error in the training
     img2id, id2bbox = {}, {}
@@ -145,6 +108,7 @@ def process(coco_annoations_file:str, output_file:str):
 
 
 if __name__ == "__main__":
+    # ref https://github.com/open-mmlab/mmocr/blob/main/tools/dataset_converters/textdet/funsd_converter.py
     parser = argparse.ArgumentParser(description="Converts COCO annotations to DIT format")
     parser.add_argument(
         "--coco_annoations_file",
