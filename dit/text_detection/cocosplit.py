@@ -51,8 +51,8 @@ def main(args):
         # loop over the annotations and extract the bounding boxes to prevent the following error:
         # AttributeError: Cannot find field 'gt_masks' in the given Instances!
         for annotation in annotations:
-            if 'segmentation' in annotation:
-                continue
+            # if 'segmentation' in annotation:
+            #     continue
             
             x,y,w,h = annotation['bbox']
             annotation['segmentation'] = [[x,y, x+w,y, x,y+h, x+w,y+h]]
