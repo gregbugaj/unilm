@@ -51,10 +51,10 @@ def process_split(coco_annoations_file:str):
     test_data['images']  = test_set
     
     # save the annotations to a new file
-    with open(f"/tmp/instances_training.json", 'w') as outfile:
+    with open(f"/tmp/dit/instances_training.json", 'w') as outfile:
         json.dump(train_data, outfile)
 
-    with open(f"/tmp/instances_test.json", 'w') as outfile:
+    with open(f"/tmp/dit/instances_test.json", 'w') as outfile:
         json.dump(test_data, outfile)
 
 
@@ -68,9 +68,6 @@ def process(coco_annoations_file:str):
     for i in range(len(data['annotations'])):   
         annotation = data['annotations'][i]
         img_id = data['annotations'][i]['image_id']
-        if "segmentation" in annotation:
-            continue
-
         x,y,w,h = annotation['bbox']
         annotation['segmentation'] = [[x,y, x+w,y, x,y+h, x+w,y+h]]
         annotation['area'] = w*h
@@ -139,7 +136,7 @@ def process(coco_annoations_file:str):
 
     # save the annotations to a new file
 
-    with open(f"/tmp/instances_converted.json", 'w') as outfile:
+    with open(f"/tmp/dit/instances_converted.json", 'w') as outfile:
         json.dump(data, outfile)
 
 

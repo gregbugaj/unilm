@@ -81,7 +81,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
 
     # 
     BUILDER_CONFIGS = [
-        FunsdConfig(name="patpay-ner", version=datasets.Version("1.0.1"), description="FUNSD like dataset, patpay-indexing"),
+        FunsdConfig(name="funsd", version=datasets.Version("3.0.4"), description="FUNSD like dataset, corr-indexing"),
     ]
 
     def _info(self):
@@ -104,19 +104,19 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 "O",
                                 'B-MEMBER_NAME', 'I-MEMBER_NAME',
                                 'B-MEMBER_NUMBER', 'I-MEMBER_NUMBER',
-                                'B-PAN', 'I-PAN',                    # 
-                                'B-PATIENT_NAME', 'I-PATIENT_NAME', 
+                                'B-PAN', 'I-PAN',
+                                'B-PATIENT_NAME', 'I-PATIENT_NAME',
                                 'B-DOS', 'I-DOS',
                                 'B-DOS_ANSWER', 'I-DOS_ANSWER',
                                 'B-PATIENT_NAME_ANSWER', 'I-PATIENT_NAME_ANSWER',
                                 'B-MEMBER_NAME_ANSWER', 'I-MEMBER_NAME_ANSWER',
-                                'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER',                                
+                                'B-MEMBER_NUMBER_ANSWER', 'I-MEMBER_NUMBER_ANSWER',
                                 'B-PAN_ANSWER', 'I-PAN_ANSWER',
                                 'B-ADDRESS', 'I-ADDRESS',
                                 'B-GREETING', 'I-GREETING',
-                                'B-HEADER', 'I-HEADER',
-                                'B-LETTER_DATE', 'I-LETTER_DATE', # ?? WHY
-                                'B-PARAGRAPH', 'I-PARAGRAPH',
+                                # 'B-HEADER', 'I-HEADER',
+                                'B-LETTER_DATE', 'I-LETTER_DATE',
+                                # 'B-PARAGRAPH', 'I-PARAGRAPH',
                                 'B-QUESTION', 'I-QUESTION',
                                 'B-ANSWER', 'I-ANSWER',
                                 'B-DOCUMENT_CONTROL', 'I-DOCUMENT_CONTROL',
@@ -134,6 +134,8 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-CHECK_AMT_ANSWER', 'I-CHECK_AMT_ANSWER',
                                 'B-CHECK_NUMBER', 'I-CHECK_NUMBER',
                                 'B-CHECK_NUMBER_ANSWER', 'I-CHECK_NUMBER_ANSWER',
+                                # 'B-LIST', 'I-LIST',
+                                # 'B-FOOTER', 'I-FOOTER',
                                 'B-DATE', 'I-DATE',
                                 'B-IDENTIFIER', 'I-IDENTIFIER',
                                 'B-PROC_CODE', 'I-PROC_CODE',
@@ -142,22 +144,7 @@ class Funsd(datasets.GeneratorBasedBuilder):
                                 'B-PROVIDER_ANSWER', 'I-PROVIDER_ANSWER',
                                 'B-MONEY', 'I-MONEY',
                                 'B-COMPANY', 'I-COMPANY',
-                                'B-DUE_DATE', 'I-DUE_DATE',
-                                'B-DUE_DATE_ANSWER', 'I-DUE_DATE_ANSWER',
-                                'B-CHECK_DATE', 'I-CHECK_DATE',
-                                'B-CHECK_DATE_ANSWER', 'I-CHECK_DATE_ANSWER',
-                                'B-SIGNATURE', 'I-SIGNATURE',
-                                'B-CHECK_BOX', 'I-CHECK_BOX',
-                                'B-MICR', 'I-MICR',
-                                'B-CHECK_TO', 'I-CHECK_TO',
-                                'B-CHECK_TO_ANSWER', 'I-CHECK_TO_ANSWER',
-                                'B-CHECK_AMT_TEXT', 'I-CHECK_AMT_TEXT',
-                                'B-CHECK_AMT_TEXT_ANSWER', 'I-CHECK_AMT_TEXT_ANSWER',
-                                'B-CHECK_BOX_DESCRIPTION', 'I-CHECK_BOX_DESCRIPTION',
-                                'B-CHECK_BOX_CHANGE_ADDRESS', 'I-CHECK_BOX_CHANGE_ADDRESS',
-                                'B-CHECK_BOX_CHANGE_ADDRESS_ANSWER', 'I-CHECK_BOX_CHANGE_ADDRESS_ANSWER',
-                                'B-BATCH_NUMBER_ANSWER', 'I-BATCH_NUMBER_ANSWER',
-                                'I-BATCH_NUMBER', 'B-BATCH_NUMBER',
+                                'B-STAMP', 'I-STAMP',
                             ]
                         )
                     ),
@@ -176,8 +163,6 @@ class Funsd(datasets.GeneratorBasedBuilder):
         # downloaded_file = dl_manager.download_and_extract("https://guillaumejaume.github.io/FUNSD/dataset.zip")
 
         downloaded_file = "/data/dataset/private/corr-indexer/ready"
-        downloaded_file = "/home/gbugaj/datasets/private/patpay-ner/complete/output/to_split-augmented"
-
         # downloaded_file = "/home/greg/dataset/assets-private/corr-indexer-augmented"
         # downloaded_file = "/home/gbugaj/datasets/private/corr-indexer-augmented"
         # downloaded_file = "/home/greg/datasets/private/assets-private/corr-indexer-augmented"
@@ -213,17 +198,29 @@ class Funsd(datasets.GeneratorBasedBuilder):
 
 
         file_path = os.path.join(ann_dir, file)
-        print("Processing: ", file_path)
         with open(file_path, "r", encoding="utf8") as f:
             data = json.load(f)
         image_path = os.path.join(img_dir, file)
         image_path = image_path.replace("json", "png")
         image, size = load_image(image_path)
 
+        # somehow we got a TEXT token with size of [0,0,W,H]
+        # TODO: investigate
+        # example :/corr-indexer-augmented/dataset/training_data/annotations/152658473_2_140_0.json
+        #       "words": [
+        # {
+        #   "box": [
+        #     0,
+        #     0,
+        #     776,
+        #     1000
+        #   ],
+        #   "text": ":"
+        # }
+        # ]
     
         for item in data["form"]:
             cur_line_bboxes = []
-            print(item)
             words, label = item["words"], item["label"]
             # remap bad 'text:' label with `:`
             for w in words:

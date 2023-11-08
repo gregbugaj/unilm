@@ -34,3 +34,8 @@ For details see README.md
 ```bash
  python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS /home/greg/tmp/models/dit_text_detection/tuned-2500-LARGE-v2/model_final.pth  OUTPUT_DIR /home/greg/tmp/models/dit_text_detection/tuned-2500-LARGE-v3 SOLVER.IMS_PER_BATCH 1
 ```
+
+
+
+
+ python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/gbugaj/datasets/private/medical_page_classification/raw/EOB  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/paper-tuned-184/model_0025999.pth
