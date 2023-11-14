@@ -25,8 +25,8 @@ def process(coco_annoations_file:str, output_file:str):
     for i in range(len(data['categories'])):
         name = data['categories'][i]['name']        
         marker = name.split('.')[0]
-        
-        if marker not in ["r", "s", "d"] or  name.endswith('_answer'):
+        # "r", "s", "d"
+        if marker not in ["m"] or name.endswith('_answer') or name != 'm.claim_data':
             id_to_remove.append(data['categories'][i]['id'])
             data['categories'][i] = None
             continue
@@ -44,7 +44,7 @@ def process(coco_annoations_file:str, output_file:str):
     #remove the categories that are not text
     data['categories'] = [x for x in data['categories'] if x is not None]
     
-    print("Total categories = ", len(data['categories']))
+    print("Total categories = ", len(data['categories'])) 
     
     # loop over the annotations and ensure that the segmentation node is present and the area is set    
     for i in range(len(data['annotations'])):   
