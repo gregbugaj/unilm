@@ -19,28 +19,36 @@ def process(coco_annoations_file:str, output_file:str):
         data = json.load(json_file)
     
     print("Total annotations = ", len(data['annotations']))
-
+    id_to_remove = []
+    id_to_keep = []
     # loop over categories and remove the ones that are not text
     for i in range(len(data['categories'])):
-        name = data['categories'][i]['name']
+        name = data['categories'][i]['name']        
+        marker = name.split('.')[0]
+        
+        if marker not in ["r", "s", "d"] or  name.endswith('_answer'):
+            id_to_remove.append(data['categories'][i]['id'])
+            data['categories'][i] = None
+            continue
+        
+        id_to_keep.append(data['categories'][i]['id'])
         print( name )
-
 
         # if data['categories'][i]['name'] != 'text':
         #     data['categories'].pop(i)
+    print("Total categories = ", len(data['categories']))
+    print("Total id_to_remove = ", len(id_to_remove))
+    print("Total id_to_keep = ", len(id_to_keep))
 
-
-    return
-    # loop over the annotations and ensure that the segmentation node is present and the area is set
+    print(id_to_keep)
+    #remove the categories that are not text
+    data['categories'] = [x for x in data['categories'] if x is not None]
+    
+    print("Total categories = ", len(data['categories']))
+    
+    # loop over the annotations and ensure that the segmentation node is present and the area is set    
     for i in range(len(data['annotations'])):   
         ann = data['annotations'][i]
-
-        # Old method
-        if False:
-            x0, y0, w, h = annotation['bbox']
-            x1, y1 = x0 + w, y0 + h
-            polygon = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-            annotation['segmentation'] = polygon
 
         # x1, y1, x2, y2 = ann['bbox']
         # x = max(0, min(math.floor(x1), math.floor(x2)))
@@ -53,6 +61,14 @@ def process(coco_annoations_file:str, output_file:str):
         ann['bbox'] = bbox
         ann['segmentation'] = [segmentation]
         ann['area'] = w * h
+
+        if ann['category_id'] not in id_to_keep:
+            print("Removing annotation with id = ", ann['id'])
+            data['annotations'][i] = None
+
+    print("Total annotations = ", len(data['annotations']))
+    #remove the annotations that are not text
+    data['annotations'] = [x for x in data['annotations'] if x is not None]
     
     # need to loop over images and check if the image has a corresponding annotation entry if not remove it or it will cause an error in the training
     img2id, id2bbox = {}, {}
@@ -141,4 +157,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     process(args.coco_annoations_file, args.output_file)    
+
 

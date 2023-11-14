@@ -420,7 +420,7 @@ class ViT(nn.Module):
         features = []
         for i, blk in enumerate(self.blocks):
             if self.use_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
+                x = checkpoint.checkpoint(blk, x, use_reentrant=False)
             else:
                 x = blk(x)
             if i in self.out_indices:
