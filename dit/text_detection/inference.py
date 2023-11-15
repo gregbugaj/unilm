@@ -10,7 +10,6 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
-from docarray import DocumentArray
 from torch.nn import Module
 from ditod import add_vit_config
 
@@ -38,7 +37,7 @@ def setup_cfg(args):
 
     # set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # device = "cpu"
+    device = "cpu"
     cfg.MODEL.DEVICE = device
 
     cfg.freeze()
@@ -152,6 +151,7 @@ def main(args):
 
 ### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/greg/datasets/private/medprov/PID/150300411/burst  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth
 
+### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/greg/datasets/private/medprov/PID/150300411/burst  --output_path /tmp/dit --opts  MODEL.WEIGHTS /home/greg/tmp/models/dit_text_detection/fixed-segmenation/model_0000999.pth
 
 def get_parser():
     parser = argparse.ArgumentParser(description="DIT TextBlock inference script")
