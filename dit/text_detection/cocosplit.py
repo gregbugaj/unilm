@@ -54,8 +54,10 @@ def main(args):
             # if 'segmentation' in annotation:
             #     continue
             
-            x,y,w,h = annotation['bbox']
-            annotation['segmentation'] = [[x,y, x+w,y, x,y+h, x+w,y+h]]
+            x, y, w, h = annotation['bbox']
+            segmentation = [x, y, x + w, y, x + w, y + h, x, y + h]
+
+            annotation['segmentation'] = [segmentation]
             annotation['area'] = w*h
 
 

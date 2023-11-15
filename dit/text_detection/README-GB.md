@@ -44,6 +44,10 @@ Local 1 GPU
 
 ```bash
  python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS /home/greg/tmp/models/dit_text_detection/tuned-2500-LARGE-v2/model_final.pth  OUTPUT_DIR /home/greg/tmp/models/dit_text_detection/tuned-2500-LARGE-v3 SOLVER.IMS_PER_BATCH 1
+
+
+ python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS ~/dev/marieai/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR ~/tmp/models/dit_text_detection/fixed-segmenation SOLVER.IMS_PER_BATCH 1
+
 ```
 
  python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/gbugaj/datasets/private/medical_page_classification/raw/EOB  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/paper-tuned-184/model_0025999.pth
@@ -94,4 +98,8 @@ python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 
 data -> /home/greg/datasets/funds_dit/v4/
 
 
->>>>>>> faa893b941ec40b828ce2cc653b45831622d844c
+# visualize the dataset
+
+```bash
+python -m detectron2.data.datasets.coco ~/datasets/funds_dit/v5/instances_training.json ~/datasets/funds_dit/v5/imgs  dit_dataset
+```
