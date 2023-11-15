@@ -21,23 +21,9 @@ def process(coco_annoations_file:str, output_file:str):
     # loop over the annotations and ensure that the segmentation node is present and the area is set
     for i in range(len(data['annotations'])):   
         ann = data['annotations'][i]
-
-        # Old method
-        if False:
-            x0, y0, w, h = annotation['bbox']
-            x1, y1 = x0 + w, y0 + h
-            polygon = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-            annotation['segmentation'] = polygon
-
-        # x1, y1, x2, y2 = ann['bbox']
-        # x = max(0, min(math.floor(x1), math.floor(x2)))
-        # y = max(0, min(math.floor(y1), math.floor(y2)))
-        # w, h = math.ceil(abs(x2 - x1)), math.ceil(abs(y2 - y1))
         x, y, w, h = ann['bbox']
-        bbox = [x, y, w, h]
         segmentation = [x, y, x + w, y, x + w, y + h, x, y + h]
         
-        ann['bbox'] = bbox
         ann['segmentation'] = [segmentation]
         ann['area'] = w * h
     
@@ -113,7 +99,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Converts COCO annotations to DIT format")
     parser.add_argument(
         "--coco_annoations_file",
-        type=str,
+        type=str, 
         help="Path to the COCO annotations file",
         required=True,
     )
