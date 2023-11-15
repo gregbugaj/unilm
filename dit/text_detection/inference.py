@@ -10,7 +10,6 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
-from docarray import DocumentArray
 from torch.nn import Module
 from ditod import add_vit_config
 
@@ -152,6 +151,8 @@ def main(args):
 
 ### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/greg/datasets/private/medprov/PID/150300411/burst  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth
 
+# EOB
+#  python ./inference.py --config-file configs/mask_rcnn_dit_base.yaml  --image_path /home/gbugaj/tmp/demo --output_path /tmp/dit --opts  MODEL.WEIGHTS /home/gbugaj/models/dit_eob_detection/tuned-01/model_0005999.pth
 
 def get_parser():
     parser = argparse.ArgumentParser(description="DIT TextBlock inference script")
