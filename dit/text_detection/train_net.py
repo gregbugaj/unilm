@@ -75,14 +75,16 @@ def main(args):
         "funsd_train",
         {},
         "data/instances_training.json",
-        "data/imgs"
+        # "data/imgs"
+        "data/"# Slice dataset
     )
 
     register_coco_instances(
         "funsd_test",
         {},
         "data/instances_test.json",
-        "data/imgs"
+        # "data/imgs"
+        "data/"
     )
 
     cfg = setup(args)

@@ -26,7 +26,8 @@ def process(coco_annoations_file:str, output_file:str):
         name = data['categories'][i]['name']        
         marker = name.split('.')[0]
         # "r", "s", "d"
-        if marker not in ["m"] or name.endswith('_answer') or name != 'm.claim_data':
+        # if marker not in ["m"] or name.endswith('_answer') or name != 'm.claim_data':
+        if name != 'r.patient_name':
             id_to_remove.append(data['categories'][i]['id'])
             data['categories'][i] = None
             continue

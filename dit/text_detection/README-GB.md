@@ -90,7 +90,8 @@ python ./cocosplit.py  ~/datasets/private/corr-tables/converted/instances_defaul
 
 
 ```bash 
-python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS /home/greg/dev/marieai/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR /home/greg/tmp/models/dit_table_detection/tuned-01 SOLVER.IMS_PER_BATCH 1
+python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS ~/dev/marieai/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR ~/models/dit_text_detection/tuned-01 SOLVER.IMS_PER_BATCH 1
+
 
 ```
 
@@ -103,3 +104,6 @@ data -> /home/greg/datasets/funds_dit/v4/
 ```bash
 python -m detectron2.data.datasets.coco ~/datasets/funds_dit/v5/instances_training.json ~/datasets/funds_dit/v5/imgs  dit_dataset
 ```
+
+
+python ./cocosplit.py  ./data/instances_default.json ./data/instances_training.json ./data/instances_test.json -s .8

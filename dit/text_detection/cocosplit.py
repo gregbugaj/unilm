@@ -42,8 +42,8 @@ def main(args):
 
     with open(args.annotations, 'rt', encoding='UTF-8') as annotations:
         coco = json.load(annotations)
-        info = coco['info']
-        licenses = coco['licenses']
+        info = coco['info'] if 'info' in coco else {}
+        licenses = coco['licenses'] if 'licenses' in coco else {}
         images = coco['images']
         annotations = coco['annotations']
         categories = coco['categories']
