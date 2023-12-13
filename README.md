@@ -64,7 +64,7 @@ Fundamental research to develop new architectures for foundation models and AI, 
 
 > [**DiT**](https://github.com/microsoft/unilm/tree/master/dit): self-supervised pre-training for Document Image Transformers
 
-> [**TextDiffuser**](https://github.com/microsoft/unilm/tree/master/textdiffuser) (```NEW```): Diffusion Models as Text Painters
+> [**TextDiffuser**](https://github.com/microsoft/unilm/tree/master/textdiffuser)/[**TextDiffuser-2**](https://github.com/microsoft/unilm/tree/master/textdiffuser-2) (```NEW```): Diffusion Models as Text Painters
 
 ### Speech
 > [**WavLM**](https://github.com/microsoft/unilm/tree/master/wavlm): speech pre-training for full stack tasks
@@ -110,6 +110,7 @@ Fundamental research to develop new architectures for foundation models and AI, 
 General technology for enabling AI capabilities w/ LLMs and MLLMs.
 
 ## News
+- Nov, 2023: [**TextDiffuser-2**](https://arxiv.org/abs/2311.16465) - TextDiffuser-2: Unleashing the Power of Language Models for Text Rendering
 - Sep, 2023: [**Kosmos-2.5**](https://arxiv.org/abs/2309.11419) - a multimodal literate model for machine reading of text-intensive images.
 - [Model Release] May, 2023: [**TextDiffuser**](https://github.com/microsoft/unilm/tree/master/textdiffuser) models and code.
 - [Model Release] March, 2023: [**BEiT-3**](https://github.com/microsoft/unilm/tree/master/beit3) pretrained models and code.
