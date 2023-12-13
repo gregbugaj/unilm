@@ -149,7 +149,7 @@ def main(args):
 
 ### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/greg/tmp/marie-cleaner/to-clean-001/burst/00001.tif --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth
 
-### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/greg/datasets/private/medprov/PID/150300411/burst  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth
+### python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/gbugaj/tmp/2022-08-09  --output_path /tmp/dit --opts  MODEL.WEIGHTS ~/dev/marieai/marie-ai/model_zoo/unilm/dit/text_detection/tuned-2500-LARGE-v5-fixed/model_0030999.pth
 
 # EOB
 #  python ./inference.py --config-file configs/mask_rcnn_dit_base.yaml  --image_path /home/gbugaj/tmp/demo --output_path /tmp/dit --opts  MODEL.WEIGHTS /home/gbugaj/models/dit_eob_detection/tuned-01/model_0005999.pth
