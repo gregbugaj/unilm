@@ -56,33 +56,50 @@ def main(args):
     """
     register publaynet first
     """
+    # register_coco_instances(
+    #     "publaynet_train",
+    #     {},
+    #     "./publaynet_data/train.json",
+    #     "./publaynet_data/train"
+    # )
+
+    # register_coco_instances(
+    #     "publaynet_val",
+    #     {},
+    #     "./publaynet_data/val.json",
+    #     "./publaynet_data/val"
+    # )
+
+    # register_coco_instances(
+    #     "icdar2019_train",
+    #     {},
+    #     "data/train.json",
+    #     "data/train"
+    # )
+
+    # register_coco_instances(
+    #     "icdar2019_test",
+    #     {},
+    #     "data/test.json",
+    #     "data/test"
+    # )
+
+
     register_coco_instances(
-        "publaynet_train",
+        "scan_of_scan_train",
         {},
-        "./publaynet_data/train.json",
-        "./publaynet_data/train"
+        "data/instances_training.json",
+        "data/images"
     )
 
     register_coco_instances(
-        "publaynet_val",
+        "scan_of_scan_test",
         {},
-        "./publaynet_data/val.json",
-        "./publaynet_data/val"
+        "data/instances_test.json",
+        "data/images"
     )
 
-    register_coco_instances(
-        "icdar2019_train",
-        {},
-        "data/train.json",
-        "data/train"
-    )
 
-    register_coco_instances(
-        "icdar2019_test",
-        {},
-        "data/test.json",
-        "data/test"
-    )
 
     cfg = setup(args)
 

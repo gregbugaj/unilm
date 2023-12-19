@@ -78,3 +78,5 @@ def main():
 if __name__ == '__main__':
     main()
 
+# model_0001999.pth
+    # /home/gbugaj/tmp/models/dit_scan_detection/tuned-01/model_0001999.pth
