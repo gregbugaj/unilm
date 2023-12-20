@@ -2,10 +2,16 @@
 
 ```shell
 python train_net.py --config-file publaynet_configs/maskrcnn/maskrcnn_dit_base.yaml --num-gpus 1 MODEL.WEIGHTS /home/greg/dev/marieai/marie-ai/model_zoo/unilm/dit/dit-fts/publaynet_dit-b_mrcnn.pth OUTPUT_DIR /home/greg/tmp/models/dit_table_detection/tuned-01 SOLVER.IMS_PER_BATCH 1
-
 ```
 
-## Inferencing
+Train and evaluate on the same dataset
+```shell
+python train_net.py --resume --eval-only --config-file scan_configs/maskrcnn/maskrcnn_dit_base.yaml --num-gpus 1 MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/dit_base/dit-base-224-p16-500k-62d53a.pth OUTPUT_DIR ~/tmp/models/dit_scan_detection/tuned-01 SOLVER.IMS_PER_BATCH 1 
+```
+
+
+
+## Inference
 
 ```shell
 python ./dit/object_detection/inference.py --image_path ./dit/object_detection/publaynet_example.jpeg --output_file_name output.jpg --config ./dit/object_detection/publaynet_configs/maskrcnn/maskrcnn_dit_base.yaml --opts MODEL.WEIGHT /home/greg/dev/marieai/marie-ai/model_zoo/unilm/dit/dit-fts/publaynet_dit-b_mrcnn.pth

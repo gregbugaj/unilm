@@ -50,6 +50,7 @@ def main():
     
     # Step 3: set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
     cfg.MODEL.DEVICE = device
 
     # Step 4: define model
