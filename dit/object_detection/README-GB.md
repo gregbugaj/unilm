@@ -56,3 +56,15 @@ python train_net.py --config-file scan_configs/maskrcnn/maskrcnn_dit_base.yaml -
 (marie) greg@xpredator:~/dev/unilm$ python ./dit/object_detection/inference.py --image_path ./dit/object_detection/publaynet_example.jpeg --output_file_name output.jpg --config ./dit/object_detection/publaynet_configs/maskrcnn/maskrcnn_dit_base.yaml --opts MODEL.WEIGHTS /home/greg/dev/marieai/marie-ai/model_zoo/unilm/dit/dit-fts/publaynet_dit-b_mrcnn.pth
 
 ```
+
+MaskRCNN
+python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_large.yaml --image_path ~/tmp/analysis/bad-docs/extracted/180857073-0003.tif  --output_file_name output.jpg --opts MODEL.WEIGHTS ~/tmp/models/dit_scan_detection/tuned-02/model_final.pth 
+
+
+CascadeRCNN
+python inference.py --config-file ./scan_configs/cascade/cascade_dit_large.yaml --image_path ~/tmp/analysis/bad-docs/extracted/180857073-0003.tif  --output_file_name output-cascade.jpg --opts MODEL.WEIGHTS ~/tmp/models/dit_scan_detection/tuned-03/model_0021999.pth 
+
+
+
+BLOWS UP MEMORY
+192875933 
