@@ -30,7 +30,10 @@ import os
 import unicodedata
 from io import open
 
-from transformers.tokenization_bert import BertTokenizer, whitespace_tokenize
+# from transformers.tokenization_bert import BertTokenizer, whitespace_tokenize
+
+from transformers import BertTokenizer
+from transformers.models.bert.tokenization_bert import whitespace_tokenize
 
 logger = logging.getLogger(__name__)
 

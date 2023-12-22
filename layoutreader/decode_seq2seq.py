@@ -18,7 +18,7 @@ from nltk.translate.bleu_score import sentence_bleu
 from tqdm import tqdm
 from transformers import \
     BertTokenizer, RobertaTokenizer
-from transformers.tokenization_bert import whitespace_tokenize
+from transformers.models.bert.tokenization_bert import whitespace_tokenize
 
 import s2s_ft.s2s_loader as seq2seq_loader
 from s2s_ft.modeling_decoding import LayoutlmForSeq2SeqDecoder, BertConfig
