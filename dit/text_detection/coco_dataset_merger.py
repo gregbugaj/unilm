@@ -53,7 +53,9 @@ class cocoFile():
 		for i in range(len(self.file['categories'])):
 			if not self.file['categories'][i]['name'] in categoryIdTable:
 				categoryIdTable[self.file['categories'][i]['name']] = currentCatId
-				currentCatId += 1
+
+				# SOMETIME WS DON'T WANT TO CHANGE THE CATEGORY ID OF THE FIRST FILE
+				# currentCatId += 1
 			
 			#now updating khud ka category id table:
 			self.catIdTable[self.file['categories'][i]['id']] = categoryIdTable[self.file['categories'][i]['name']]

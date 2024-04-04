@@ -18,17 +18,48 @@ def process(coco_annoations_file:str, output_file:str):
     with io.open(coco_annoations_file, "r", encoding="utf-8") as json_file:
         data = json.load(json_file)
 
-    # loop over the annotations and ensure that the segmentation node is present and the area is set
-    for i in range(len(data['annotations'])):   
+    # filter out the annotations that are not of category 1
+    filter_annotations = True
+
+    if filter_annotations:
+        annotations = []
+        categories = []
+
+        print(f"before filter = {len(data['annotations'])}")
+
+        for i in range(len(data['annotations'])):
+            if data['annotations'][i]['category_id'] == 1:
+                annotations.append(data['annotations'][i])
+
+        for i in range(len(data['categories'])):
+            if data['categories'][i]['id'] == 1:
+                categories.append(data['categories'][i])
+
+        data['annotations'] = annotations
+        data['categories'] = categories
+
+
+        print(f"after filter = {len(data['annotations'])}")
+
+    # loop over the annotations and ensure that the segmentation node is present and the area is set    
+    for i in range(len(data['annotations'])):
         ann = data['annotations'][i]
         x, y, w, h = ann['bbox']
+
+        # expand the bounding box by 1 pixel
+        x = math.floor(x)
+        w = math.ceil(w)
+
+        delta = 2
+        x = max(0, x - delta)
+        w = w + delta
+        ann['bbox'] = [x, y, w, h]
+        
         segmentation = [x, y, x + w, y, x + w, y + h, x, y + h]
         
         ann['segmentation'] = [segmentation]
         ann['area'] = w * h
 
-        # change the category id to start from 0 instead of 1
-        ann['category_id'] = int(ann['category_id']) - 1
 
     
     # need to loop over images and check if the image has a corresponding annotation entry if not remove it or it will cause an error in the training
@@ -37,6 +68,10 @@ def process(coco_annoations_file:str, output_file:str):
 
     for i in range(len(data['images'])):
         key = os.path.basename(data['images'][i]['file_name'][:-len('.png')])
+
+        if key in img2id.keys():
+            print(f"Duplicate image {key}")
+            continue
         assert key not in img2id.keys()
         img2id[key] = data['images'][i]['id']
         has_annotation = False

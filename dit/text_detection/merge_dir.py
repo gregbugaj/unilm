@@ -171,6 +171,12 @@ def merge_dir(src_dir,output_file):
     :param src_dir: source directory, all files in this directory and sub-dir will be merged
     :param output_file: output file path
     """
+    if not os.path.exists(src_dir):
+        raise FileNotFoundError("Directory not found: {}".format(src_dir))
+
+    if not os.path.isdir(src_dir):
+        raise FileNotFoundError("Path is not a directory: {}".format(src_dir))
+        
     files = []
     for r, d, f in os.walk(src_dir):
         for file in f:
