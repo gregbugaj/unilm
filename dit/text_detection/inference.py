@@ -37,7 +37,7 @@ def setup_cfg(args):
 
     # set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    device = "cpu"
+    # device = "cpu"
     cfg.MODEL.DEVICE = device
 
     cfg.freeze()
@@ -92,6 +92,7 @@ def process_dir(predictor: DefaultPredictor, image_dir: str):
             print(e)
             # raise e
 
+@torch.no_grad()
 def inference(predictor:DefaultPredictor, image_path: str):
     print(f"Inference on image: {image_path}")
     img = cv2.imread(image_path)

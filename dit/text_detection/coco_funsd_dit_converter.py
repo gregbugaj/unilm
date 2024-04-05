@@ -50,8 +50,8 @@ def process(coco_annoations_file:str, output_file:str):
         x = math.floor(x)
         w = math.ceil(w)
 
-        delta = 2
-        x = max(0, x - delta)
+        delta = 4
+        x = max(0, x)
         w = w + delta
         ann['bbox'] = [x, y, w, h]
         

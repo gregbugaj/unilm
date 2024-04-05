@@ -43,15 +43,16 @@ Local 1 GPU
 
 
 ```bash
- python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/tuned-4000-LARGE/model_final.pth  OUTPUT_DIR  /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/tuned-4000-20240405-001  SOLVER.IMS_PER_BATCH 1
+ python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/tuned-4000-LARGE/model_final.pth  OUTPUT_DIR  /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/tuned-4000-20240405-002  SOLVER.IMS_PER_BATCH 1
 
 
  python train_net.py --config-file configs/mask_rcnn_dit_large.yaml --num-gpus 1 --resume MODEL.WEIGHTS ~/dev/marieai/marie-ai/model_zoo/unilm/dit/text_detection/td-syn_dit-l_mrcnn.pth  OUTPUT_DIR ~/tmp/models/dit_text_detection/fixed-segmenation SOLVER.IMS_PER_BATCH 1
 
 ```
 
- python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path /home/gbugaj/datasets/private/medical_page_classification/raw/EOB  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/tuned-4000-20240405-001/model_0000999.pth
-
+```bash
+ python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path ~/datasets/private/medical_page_classification/raw/EOB  --output_path /tmp/dit --opts  MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/text_detection/tuned-4000-20240405-002/model_0000999.pth
+```
 
 A-100 4-GPU
 
@@ -102,7 +103,7 @@ data -> /home/greg/datasets/funsd_dit/v4/
 # visualize the dataset
 
 ```bash
-python -m detectron2.data.datasets.coco ~/datasets/funsd_dit/v5/instances_training.json ~/datasets/funsd_dit/v5/imgs  dit_dataset
+python -m detectron2.data.datasets.coco ~/datasets/funsd_dit/v6/instances_training.json ~/datasets/funsd_dit/v6/imgs  dit_dataset_v6
 ```
 
 
