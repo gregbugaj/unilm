@@ -60,6 +60,8 @@ def process(coco_annoations_file:str, output_file:str):
         ann['segmentation'] = [segmentation]
         ann['area'] = w * h
 
+        # change the category id to start from 0 instead of 1
+        # ann['category_id'] = int(ann['category_id']) - 1
 
     
     # need to loop over images and check if the image has a corresponding annotation entry if not remove it or it will cause an error in the training
