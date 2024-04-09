@@ -25,7 +25,7 @@ python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_base.yaml
 ## Data preparation
 
 
-Ensure that the dataset has been updated ot contain the `segmentation` field in the annotations. This is required for the conversion to COCO format.
+Ensure that the dataset has been updated to contain the `segmentation` field in the annotations. This is required for the conversion to COCO format.
 
 
 ```shell
@@ -46,8 +46,11 @@ python ./cocosplit.py  ~/datasets/private/scan-of-scan/converted/converted.json 
 ## Training
 
 ```shell
-python train_net.py --config-file scan_configs/maskrcnn/maskrcnn_dit_base.yaml --num-gpus 1 MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/dit_base/dit-base-224-p16-500k-62d53a.pth OUTPUT_DIR ~/tmp/models/dit_scan_detection/tuned-01 SOLVER.IMS_PER_BATCH 1
+python train_net.py --config-file scan_configs/maskrcnn/maskrcnn_dit_base.yaml --num-gpus 1 MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/dit_base/
+dit-base-224-p16-500k-62d53a.pth OUTPUT_DIR ~/tmp/models/dit_scan_detection/tuned-01 SOLVER.IMS_PER_BATCH 1
 
+
+python train_net.py --config-file scan_configs/maskrcnn/maskrcnn_dit_base.yaml --num-gpus 1 MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/unilm/dit/dit_base/dit-base-224-p16-500k-62d53a.pth OUTPUT_DIR ~/tmp/models/dit_scan_detection/tuned-01 SOLVER.IMS_PER_BATCH 1
 ```
 
 ## Inferencing
@@ -68,3 +71,6 @@ python inference.py --config-file ./scan_configs/cascade/cascade_dit_large.yaml 
 
 BLOWS UP MEMORY
 192875933 
+
+
+python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_base.yaml --image_path ~/tmp/demo/PID_114_6416_0_177360024_page_0003.png  --output_file_name output.jpg --opts MODEL.WEIGHTS ~/tmp/models/dit_scan_detection/tuned-02/model_final.pth 
