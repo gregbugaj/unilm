@@ -37,7 +37,7 @@ def setup_cfg(args):
 
     # set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # device = "cpu"
+    device = "cpu"
     cfg.MODEL.DEVICE = device
 
     cfg.freeze()
@@ -112,7 +112,8 @@ def inference(predictor:DefaultPredictor, image_path: str, output_path: str):
     # create empty metadata catalog
     from detectron2.data import MetadataCatalog
     md = MetadataCatalog.get("ditod_test")
-    md.set(thing_classes=["cropped_page","header","footer","sidebar"])
+    # md.set(thing_classes=["cropped_page","header","footer","sidebar"])
+    md.set(thing_classes=["logo"])
 
 
     v = Visualizer(img[:, :, ::-1],

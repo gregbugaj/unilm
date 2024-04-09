@@ -39,7 +39,6 @@ Visualizing dataset
 Inference
 =========
 
-``
 ```
  python ./inference.py --config-file configs/mask_rcnn_dit_base.yaml  --image_path /home/gbugaj/tmp/analysis/scan-of-a-scan  --output_path /tmp/dit --opts  MODEL.WEIGHTS /home/gbugaj/resized_scans_detection/tuned-01/model_0004999.pth
 ```

@@ -1,3 +1,4 @@
+
 ## Training
 
 ```shell
@@ -10,7 +11,6 @@ python train_net.py --resume --eval-only --config-file scan_configs/maskrcnn/mas
 ```
 
 
-
 ## Inference
 
 ```shell
@@ -21,7 +21,7 @@ python ./dit/object_detection/inference.py --image_path ./dit/object_detection/p
 python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_base.yaml --image_path ~/datasets/private/scan-of-scan/converted/images/resize_scans/train/189423389_1.png --output_path output.jpg  --opts MODEL.WEIGHTS ~/tmp/models/dit_scan_detection/tuned-01/model_0001999.pth
 ```
 
-
+/home/gbugaj/datasets/private/scan-of-scan/TID-118104
 ## Data preparation
 
 
