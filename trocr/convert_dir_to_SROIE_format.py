@@ -88,7 +88,7 @@ def split_dir(src_dir, output_dir):
 
 if __name__ == "__main__":
 
-    src_dir = '/home/greg/datasets/SROIE_OCR/raw'
+    src_dir = '/tmp/boxes/number'
     output_dir = '/home/greg/datasets/SROIE_OCR/converted'
     output_train_test_dir = '/home/greg/datasets/SROIE_OCR/ready'
 
