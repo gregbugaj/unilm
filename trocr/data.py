@@ -125,6 +125,10 @@ def SROIETask2(root_dir: str, bpe, target_dict, crop_img_output_dir=None):
 
 class SROIETextRecognitionDataset(FairseqDataset):
     def __init__(self, root_dir, tfm, bpe_parser, target_dict, crop_img_output_dir=None):
+        
+        print("*** SROIETextRecognitionDataset ***")
+        print("**" * 20)
+        print("root_dir: ", root_dir)
         self.root_dir = root_dir
         self.tfm = tfm            
         self.target_dict = target_dict
