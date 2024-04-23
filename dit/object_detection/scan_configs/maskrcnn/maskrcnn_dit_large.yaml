@@ -18,10 +18,10 @@ SOLVER:
   AMP:
     ENABLED: False
 TEST:
-  EVAL_PERIOD: 2000
+  EVAL_PERIOD: 1000
 OUTPUT_DIR: "output/publaynet/mask_rcnn/dit_base_multistep_3x_ms"
 
 INPUT:
-  MAX_SIZE_TEST: 2000
-  MAX_SIZE_TRAIN: 2000
+  MAX_SIZE_TEST: 1000
+  MAX_SIZE_TRAIN: 1000
 

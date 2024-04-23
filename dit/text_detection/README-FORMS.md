@@ -3,6 +3,9 @@
 
 ```bash
  python ./coco_funsd_eob_converter.py --coco_annoations_file ~/datasets/private/eob-extract/project_eob-extraction-2023_11_13_17_54_08-coco/annotations/instances_default.json --output_file ~/datasets/private/eob-extract/converted/converted.json
+
+
+  python ./coco_funsd_dit_converter.py --coco_annoations_file ~/datasets/private/form-segmenation/tid-118104-1000/task/annotations/instances_default.json --output_file ~/datasets/private/form-segmenation/tid-118104-1000/converted/converted.json
 ```
 
 
@@ -12,6 +15,9 @@ We split the dataset into training and test sets using the following command:
 
 ```bash
 python ./cocosplit.py  ~/datasets/private/resized_scans_dataset/converted/converted.json ~/datasets/private/resized_scans_dataset/converted/instances_training.json ~/datasets/private/resized_scans_dataset/converted/instances_test.json -s .8
+
+
+python ./cocosplit.py  ~/datasets/private/form-segmenation/tid-118104-1000/converted/converted.json  ~/datasets/private/form-segmenation/tid-118104-1000/converted/instances_training.json ~/datasets/private/form-segmenation/tid-118104-1000/converted/instances_test.json -s .8
 ```
 
 Training the model
@@ -22,6 +28,8 @@ ensure that the `data` folder is a symlink to the `~/datasets/private/resized_sc
 
 ```bash
 ln -s ~/datasets/private/resized_scans_dataset/converted/ data
+
+ln -s ~/datasets/private/form-segmenation/tid-118104-1000/converted data
 ```
 
 ```

@@ -99,6 +99,7 @@ def process_dir(predictor: DefaultPredictor, image_dir: str, output_dir: str):
 
 def inference(predictor:DefaultPredictor, image_path: str, output_path: str):
     print(f"Inference on image: {image_path}")
+    print(f"Output path: {output_path}")
     img = cv2.imread(image_path)
     output = predictor(img)["instances"]
     
