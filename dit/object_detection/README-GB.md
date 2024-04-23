@@ -35,8 +35,6 @@ python coco_funsd_dit_converter.py --coco_annoations_file ~/datasets/private/eob
 python coco_funsd_dit_converter.py --coco_annoations_file ~/datasets/private/eob-registration/task_template_master-train-001-2023_12_29_21_14_41-coco/annotations/instances_default.json --output_file ~/datasets/private/eob-registration/converted/converted-templatemaster.json
 ```
 
-443
-226
 
 Depending on the dataset you might have to adjust the `category_id` in the `coco_funsd_dit_converter.py` script. This is the category id that will be used in the COCO annotations. 
 
@@ -45,6 +43,8 @@ Depending on the dataset you might have to adjust the `category_id` in the `coco
 
 ```shell
 python ./coco_dataset_merger.py ~/datasets/private/eob-registration/converted/converted-scanofscan.json ~/datasets/private/eob-registration/converted/converted-templatemaster.json   ~/datasets/private/eob-registration/converted/merged.json
+=======
+python coco_funsd_dit_converter.py --coco_annoations_file ~/datasets/private/form-segmenation/tid-118104-1000/task/annotations/instances_default.json --output_file ~/datasets/private/form-segmenation/tid-118104-1000/converted/converted.json
 
 ```
     
@@ -60,7 +60,8 @@ Splitting the dataset
 We split the dataset into training and test sets using the following command:
 
 ```bash
-python ./cocosplit.py  ~/datasets/private/eob-registration/converted/merged.json ~/datasets/private/eob-registration/converted/instances_training.json ~/datasets/private/eob-registration/converted/instances_test.json -s .75
+
+python ./cocosplit.py  ~/datasets/private/form-segmenation/tid-118104-1000/converted/converted.json ~/datasets/private/form-segmenation/tid-118104-1000/converted/instances_training.json ~/datasets/private/form-segmenation/tid-118104-1000/converted/instances_test.json -s .8
 ```
 
 
@@ -110,4 +111,8 @@ BLOWS UP MEMORY
 192875933 
 
 
+<<<<<<< HEAD
 python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_base.yaml --image_path ~/datasets/funsd_dit/converted/imgs/bboxes/03-2024 --output_path /tmp/dit-segmentation --opts MODEL.WEIGHTS /mnt/data/marie-ai/model_zoo/form-registration/scan-of-scan-04082024/model_0045999.pth
+=======
+python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_base.yaml --image_path ~/tmp/demo/PID_114_6416_0_177360024_page_0003.png  --output_file_name output.jpg --opts MODEL.WEIGHTS ~/tmp/models/dit_scan_detection/tuned-01/model_0001999.pth
+>>>>>>> c5df126d394ef796174e190d660d11d8bc55f9b2
