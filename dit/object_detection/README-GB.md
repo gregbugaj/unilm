@@ -29,7 +29,7 @@ Ensure that the dataset has been updated to contain the `segmentation` field in 
 
 
 ```shell
-python coco_funsd_dit_converter.py --coco_annoations_file ~/datasets/private/scan-of-scan/12-18-2023/annotations/instances_default.json --output_file ~/datasets/private/scan-of-scan/converted/converted.json
+python coco_funsd_dit_converter.py --coco_annoations_file ~/datasets/private/form-segmenation/tid-118104-1000/task/annotations/instances_default.json --output_file ~/datasets/private/form-segmenation/tid-118104-1000/converted/converted.json
 
 ```
 
@@ -38,7 +38,7 @@ Splitting the dataset
 We split the dataset into training and test sets using the following command:
 
 ```bash
-python ./cocosplit.py  ~/datasets/private/scan-of-scan/converted/converted.json ~/datasets/private/scan-of-scan/converted/instances_training.json ~/datasets/private/scan-of-scan/converted/instances_test.json -s .8
+python ./cocosplit.py  ~/datasets/private/form-segmenation/tid-118104-1000/converted/converted.json ~/datasets/private/form-segmenation/tid-118104-1000/converted/instances_training.json ~/datasets/private/form-segmenation/tid-118104-1000/converted/instances_test.json -s .8
 ```
 
 
@@ -73,4 +73,4 @@ BLOWS UP MEMORY
 192875933 
 
 
-python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_base.yaml --image_path ~/tmp/demo/PID_114_6416_0_177360024_page_0003.png  --output_file_name output.jpg --opts MODEL.WEIGHTS ~/tmp/models/dit_scan_detection/tuned-02/model_final.pth 
+python inference.py --config-file ./scan_configs/maskrcnn/maskrcnn_dit_base.yaml --image_path ~/tmp/demo/PID_114_6416_0_177360024_page_0003.png  --output_file_name output.jpg --opts MODEL.WEIGHTS ~/tmp/models/dit_scan_detection/tuned-01/model_0001999.pth
