@@ -45,5 +45,4 @@ Inference
 python ./inference.py --config-file configs/mask_rcnn_dit_large.yaml  --image_path ~/datasets/private/eob-extract/converted/imgs/eob-extract/eob-001  --output_path /tmp/dit-linesegment --opts  MODEL.WEIGHTS ~/tmp/models/dit_linesegment_detection/tuned-01/model_0000999.pth
 ```
 
- 
 

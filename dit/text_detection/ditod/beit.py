@@ -596,7 +596,7 @@ class BEiT(nn.Module):
 
         for i, blk in enumerate(self.blocks):
             if self.use_checkpoint:
-                x = checkpoint.checkpoint(blk, x, rel_pos_bias, training_window_size)
+                x = checkpoint.checkpoint(blk, x, rel_pos_bias, training_window_size, use_reentrant=False)
             else:
                 x = blk(x, rel_pos_bias=rel_pos_bias, training_window_size=training_window_size)
             if i in self.out_indices:
