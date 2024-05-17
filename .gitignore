@@ -1,6 +1,9 @@
 runs/
 
 dit/text_detection/data
+dit/object_detection/data
+dit/text_detection/coco-data-vis/
+dit/object_detection/coco-data-vis/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

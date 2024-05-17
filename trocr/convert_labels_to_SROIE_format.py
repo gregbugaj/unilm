@@ -18,7 +18,45 @@ def get_full_image_bounding_box(width: int, height: int):
     return x1, y1, x2, y2, x3, y3, x4, y4
  
    
-def process_dir(src_dir: str, output_dir:str) -> None:
+def process_dir(slabels_file, src_dir: str, output_dir:str) -> None:
+
+    # read the labels file
+    with open(labels_file, 'r') as f:
+        labels = f.readlines()
+    
+    for line in labels:
+        try:
+            line = line.strip().split(',')
+            if len(line) != 3:
+                continue
+            
+            img_file = line[0]
+            text = line[1]
+            enabled = line[2]            
+            if enabled != '1':
+                continue
+
+            text = text.upper().strip()
+            print(enabled, img_file, text)
+
+            src_image = os.path.join(src_dir, img_file)
+            img = Image.open(src_image)
+            save_dir = output_dir
+
+            img.save(os.path.join(save_dir, img_file.replace('.jpg', '.jpg')), quality=100)
+
+            width, height = img.size
+            label_file = img_file.replace('.jpg', '.txt')
+
+            with open(os.path.join(save_dir, label_file), 'w') as f:
+                x1, y1, x2, y2, x3, y3, x4, y4 = get_full_image_bounding_box(width, height)
+                f.write(f"{x1},{y1},{x2},{y2},{x3},{y3},{x4},{y4},{text}\n")
+
+        except Exception as e:
+            print(e)
+
+    return 
+
     print("Converting images in directory: ", src_dir)
     os.makedirs(output_dir, exist_ok=True)
 
@@ -64,39 +102,14 @@ def process_dir(src_dir: str, output_dir:str) -> None:
         except Exception as e:
             print(e)
 
-def split_dir(src_dir, output_dir, test_size=0.1):
-    
-    # Create directories for the training and testing sets
-    train_dir = os.path.join(output_dir, 'train')
-    test_dir = os.path.join(output_dir, 'test')
-    os.makedirs(train_dir, exist_ok=True)
-    os.makedirs(test_dir, exist_ok=True)
-    
-    img_dirs = glob.glob(os.path.join(src_dir, "*.jpg"))
-    random.shuffle(img_dirs)
-
-    train_dirs, test_dirs = train_test_split(img_dirs, test_size=test_size, random_state=42)
-    # Copy the images and labels to the training and testing directories
-    for img_dir in train_dirs:
-        shutil.copy(img_dir, train_dir)
-        shutil.copy(img_dir.replace('.jpg', '.txt'), train_dir)
-
-    for img_dir in test_dirs:
-        shutil.copy(img_dir, test_dir)
-        shutil.copy(img_dir.replace('.jpg', '.txt'), test_dir)
-    
 
 
 if __name__ == "__main__":
 
+    labels_file= "/home/greg/datasets/SROIE_OCR/ICR_DATA/labels.csv"
+    src_dir = '/home/greg/datasets/SROIE_OCR/ICR_DATA/set_1'
+    output_dir = '/home/greg/datasets/SROIE_OCR/ICR_DATA/converted'
+
     
-    output_dir = '/home/greg/datasets/SROIE_OCR/converted'
-    output_train_test_dir = '/home/greg/datasets/SROIE_OCR/ready'
-
-    process_dir('/home/greg/datasets/SROIE_OCR/boxes/validated-True/alpha', output_dir)
-    process_dir('/home/greg/datasets/SROIE_OCR/boxes/validated-True/number', output_dir)
-    process_dir('/home/greg/datasets/SROIE_OCR/raw', output_dir)
-
-    split_dir(output_dir, output_train_test_dir, test_size=0.2)
+    process_dir(labels_file, src_dir, output_dir)
     
-

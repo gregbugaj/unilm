@@ -2,14 +2,15 @@ export DATA=/home/greg/datasets/SROIE_FineTune
 
 export DATA=/home/greg/datasets/SROIE_OCR/ready
 export MODEL_BASE=/mnt/data/marie-ai/model_zoo/trocr/trocr-large-printed.pt
+# export MODEL_BASE=/data/models/unilm/trocr/ft_SROIE_LINES_SET18/checkpoint_best.pt
 
-export MODEL_NAME=ft_SROIE_LINES_SET13
+export MODEL_NAME=ft_SROIE_LINES_SET41
 export SAVE_PATH=/data/models/unilm/trocr/${MODEL_NAME}
 export LOG_DIR=log_${MODEL_NAME}
 
 mkdir ${LOG_DIR}
-export BSZ=4
-export valid_BSZ=4
+export BSZ=8
+export valid_BSZ=6
 
 $(which fairseq-train) \
     --data-type SROIE --user-dir ./ --task text_recognition --input-size 384 \
